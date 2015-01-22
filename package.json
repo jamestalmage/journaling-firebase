@@ -1,0 +1,39 @@
+{
+  "name": "journaling-firebase",
+  "version": "0.0.1",
+  "description": "Journaling Entries for Firebase",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jamestalmage/journaling-firebase.git"
+  },
+  "keywords": [
+    "firebase",
+    "journaling",
+    "change",
+    "tracking"
+  ],
+  "author": "James Talmage <james.talmage@jrtechnical.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jamestalmage/journaling-firebase/issues"
+  },
+  "homepage": "https://github.com/jamestalmage/journaling-firebase",
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "gulp": "^3.8.10",
+    "gulp-mocha": "^2.0.0",
+    "gulp-util": "^3.0.2",
+    "mocha": "^2.1.0",
+    "mockfirebase":"git://github.com/jamestalmage/mockfirebase.git#priority-timestamps-release",
+    "rewire": "^2.1.4",
+    "sinon": "^1.12.2",
+    "sinon-chai": "^2.6.0"
+  },
+  "dependencies": {
+    "firebase": "^2.1.1"
+  }
+}
