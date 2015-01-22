@@ -1,6 +1,5 @@
 var gulp = require('gulp');
-var gutil = require('gulp-util');
-var mocha = require('gulp-mocha');
+var plugins = require('gulp-load-plugins')();
 
 gulp.task('test',mochaTask);
 
@@ -11,7 +10,7 @@ gulp.task('watch-test',function(){
 
 function mochaTask(){
   return gulp.src(['test/*.js'],{read:false})
-    .pipe(mocha({
+    .pipe(plugins.mocha({
       growl:true
     }))
     .on('error',logMochaError);
@@ -19,8 +18,8 @@ function mochaTask(){
 
 function logMochaError(err){
   if(err && err.message){
-    gutil.log(err.message);
+    plugins.util.log(err.message);
   } else {
-    gutil.log.apply(gutil,arguments);
+    plugins.util.log.apply(gutil,arguments);
   }
 }
