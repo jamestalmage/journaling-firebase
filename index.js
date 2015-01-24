@@ -1,3 +1,3 @@
 module.exports = {
-  Entry: require('src/Entry')
+  Entry: require('./src/Entry')
 };
