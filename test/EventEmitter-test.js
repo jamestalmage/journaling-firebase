@@ -279,6 +279,37 @@ describe('Emitter', function(){
     })
   })
 
+  describe('.cancel()', function(){
+    it('should remove all listeners', function(){
+      var emitter = new Emitter;
+      var calls = [];
+      function callA(){
+        calls.push('callA');
+      }
+      function callB(){
+        calls.push('callB');
+      }
+      function cancelA(){
+        calls.push('cancelA');
+      }
+      function cancelB(){
+        calls.push('cancelB');
+      }
+      emitter.on('a', callA, cancelA);
+      emitter.on('b', callB, cancelB);
+      emitter.emit('a');
+      emitter.emit('b');
+      emitter.cancel();
+      emitter.emit('a');
+      emitter.emit('b');
+      expect(calls).to.eql(['callA','callB','cancelA','cancelB']);
+    })
+
+    it('should work if there are no listeners', function(){
+      (new Emitter()).cancel();
+    })
+  })
+
   describe('.off(event, fn, ctx)', function(){
     it('should remove a listener', function(){
       var emitter = new Emitter;

@@ -105,6 +105,7 @@ Emitter.prototype.cancel = function(eventType){
   }
   var args = [].slice.call(arguments, 1);
   for (var e in cbObj){
+    /* istanbul ignore else  */
     if(cbObj.hasOwnProperty(e)){
       var callbacks = cbObj[e];
       for(var spec, i = 0, len = callbacks.length; i < len; i++){
