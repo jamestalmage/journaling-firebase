@@ -22,7 +22,7 @@ describe('Entry',function(){
     var value1;
     var pp1 = new Entry(mockFbBase.push());
     pp1.on('value',function(v){
-      value1 = v;
+      value1 = v.val();
     });
     pp1.set('hello');
     mockFbBase.flush();
@@ -31,7 +31,7 @@ describe('Entry',function(){
     var value2;
     var pp2 = new Entry(pp1.ref());
     pp2.on('value',function(v){
-      value2 = v;
+      value2 = v.val();
     });
     mockFbBase.flush();
     expect(value2).to.equal('hello');
@@ -41,7 +41,7 @@ describe('Entry',function(){
     var value1;
     var pp1 = new Entry(mockFbBase.push());
     pp1.on('value',function(v){
-      value1 = v;
+      value1 = v.val();
     });
     pp1.set('hello');
     mockFbBase.flush();
@@ -53,7 +53,7 @@ describe('Entry',function(){
     var value2;
     var pp2 = new Entry(pp1.ref());
     pp2.on('value',function(v){
-      value2=v;
+      value2 = v.val();
     });
     mockFbBase.flush();
     expect(value2).to.equal('goodbye');

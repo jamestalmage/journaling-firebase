@@ -22,8 +22,8 @@ Entry.prototype.key = function(){
 }
 
 Entry.prototype._onChildAddedFn = function(snap){
-  var entry = firstChild(snap.val());
-  this._events.emit('value',entry ? entry.value : null);
+  var key = firstChildKey(snap);
+  this._events.emit('value', snap.child(key || 'nullValue').child('value'));
 }
 
 Entry.prototype.on = function(){
@@ -38,11 +38,12 @@ Entry.prototype.off = function(){
   this._events.off.apply(this._events,arguments);
 }
 
-function firstChild(val){
+function firstChildKey(snap){
+  var val = snap.val();
   if(val === null) return null;
   var keys = Object.keys(val);
   if(keys.length === 0) return null;
-  return val[keys[0]];
+  return keys[0];
 }
 
 module.exports = Entry;
