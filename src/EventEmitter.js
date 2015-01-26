@@ -27,9 +27,9 @@ Emitter.prototype.on = function(eventType, callback, cancelCallback, context){
 };
 
 Emitter.prototype.once = function(eventType, successCallback, failureCallback, context){
-  if(arguments.length == 3 && typeof cancelCallback != 'function'){
-    context = cancelCallback;
-    cancelCallback = noop;
+  if(arguments.length == 3 && typeof failureCallback != 'function'){
+    context = failureCallback;
+    failureCallback = noop;
   }
 
   var self = this;
@@ -92,19 +92,26 @@ Emitter.prototype.emit = function(eventType){
 };
 
 Emitter.prototype.cancel = function(eventType){
-  this._callbacks = this._callbacks || {};
+  if(!this._callbacks) return;
+  var cbObj;
   if(eventType){
-    var args = [].slice.call(arguments, 1)
-      , callbacks = this._callbacks[eventType];
-    if(callbacks) {
-      delete this._callbacks[eventType];
+    cbObj = {};
+    cbObj[eventType] = this._callbacks[eventType] || [];
+    delete this._callbacks[eventType];
+  }
+  else {
+    cbObj = this._callbacks;
+    delete this._callbacks;
+  }
+  var args = [].slice.call(arguments, 1);
+  for (var e in cbObj){
+    if(cbObj.hasOwnProperty(e)){
+      var callbacks = cbObj[e];
       for(var spec, i = 0, len = callbacks.length; i < len; i++){
         spec = callbacks[i];
         spec[2].apply(spec[1],args);
       }
     }
-  } else {
-    Object.keys(this._callbacks).forEach(this.cancel,this);
   }
 };
 
