@@ -1,14 +1,12 @@
 var Firebase = require('firebase');
+var EventEmitter = require('./EventEmitter');
 
 function Entry(ref){
   this._ref = ref;
   this._key = ref.key();
   this._query = ref.limit(1);
   this._query.on('value', this._onChildAddedFn, null, this);
-}
-
-Entry.prototype.get = function(){
-  return this._value;
+  this._events = new EventEmitter();
 }
 
 Entry.prototype.set = function (val){
@@ -25,7 +23,19 @@ Entry.prototype.key = function(){
 
 Entry.prototype._onChildAddedFn = function(snap){
   var entry = firstChild(snap.val());
-  this._value = entry ? entry.value : null;
+  this._events.emit('value',entry ? entry.value : null);
+}
+
+Entry.prototype.on = function(){
+  this._events.on.apply(this._events,arguments);
+}
+
+Entry.prototype.once = function(){
+  this._events.once.apply(this._events,arguments);
+}
+
+Entry.prototype.off = function(){
+  this._events.off.apply(this._events,arguments);
 }
 
 function firstChild(val){

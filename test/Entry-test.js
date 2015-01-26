@@ -19,28 +19,44 @@ describe('Entry',function(){
   });
 
   it('get set works',function(){
+    var value1;
     var pp1 = new Entry(mockFbBase.push());
+    pp1.on('value',function(v){
+      value1 = v;
+    });
     pp1.set('hello');
     mockFbBase.flush();
-    expect(pp1.get()).to.equal('hello');
+    expect(value1).to.equal('hello');
 
+    var value2;
     var pp2 = new Entry(pp1.ref());
+    pp2.on('value',function(v){
+      value2 = v;
+    });
     mockFbBase.flush();
-    expect(pp2.get()).to.equal('hello');
+    expect(value2).to.equal('hello');
   });
 
   it('most recent value',function(){
+    var value1;
     var pp1 = new Entry(mockFbBase.push());
+    pp1.on('value',function(v){
+      value1 = v;
+    });
     pp1.set('hello');
     mockFbBase.flush();
-    expect(pp1.get()).to.equal('hello');
+    expect(value1).to.equal('hello');
     pp1.set('goodbye');
     mockFbBase.flush();
-    expect(pp1.get()).to.equal('goodbye');
+    expect(value1).to.equal('goodbye');
 
+    var value2;
     var pp2 = new Entry(pp1.ref());
+    pp2.on('value',function(v){
+      value2=v;
+    });
     mockFbBase.flush();
-    expect(pp2.get()).to.equal('goodbye');
+    expect(value2).to.equal('goodbye');
   });
 
 });
