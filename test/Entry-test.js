@@ -24,7 +24,7 @@ describe('Entry',function(){
     mockFbBase.flush();
     expect(pp1.get()).to.equal('hello');
 
-    var pp2 = new Entry(pp1.ref);
+    var pp2 = new Entry(pp1.ref());
     mockFbBase.flush();
     expect(pp2.get()).to.equal('hello');
   });
@@ -38,7 +38,7 @@ describe('Entry',function(){
     mockFbBase.flush();
     expect(pp1.get()).to.equal('goodbye');
 
-    var pp2 = new Entry(pp1.ref);
+    var pp2 = new Entry(pp1.ref());
     mockFbBase.flush();
     expect(pp2.get()).to.equal('goodbye');
   });

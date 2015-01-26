@@ -1,39 +1,38 @@
 var Firebase = require('firebase');
 
 function Entry(ref){
-  //var events = new EventEmitter;
-  var _value;
-  var key = ref.key();
-  var ordered = ref.limit(1);
+  this._ref = ref;
+  this._key = ref.key();
+  this._query = ref.limit(1);
+  this._query.on('value', this._onChildAddedFn, null, this);
+}
 
-  function firstChild(val){
-    if(val === null) return null;
-    var keys = Object.keys(val);
-    if(keys.length === 0) return null;
-    return val[keys[0]];
-  }
+Entry.prototype.get = function(){
+  return this._value;
+}
 
-  function onChildAdded (snap) {
-    var entry = firstChild(snap.val());
-    _value = entry ? entry.value : null;
-    //events.emit('value',_value);
-  }
+Entry.prototype.set = function (val){
+  this.ref().push().setWithPriority({value:val},Firebase.ServerValue.TIMESTAMP);
+}
 
-  function setValue(val){
-    ref.push().setWithPriority({value:val},Firebase.ServerValue.TIMESTAMP);
-  }
+Entry.prototype.ref = function(){
+  return this._ref;
+}
 
-  function getValue(){
-    return _value;
-  }
+Entry.prototype.key = function(){
+  return this._key;
+}
 
-  this.key = key;
-  this.ref = ref;
+Entry.prototype._onChildAddedFn = function(snap){
+  var entry = firstChild(snap.val());
+  this._value = entry ? entry.value : null;
+}
 
-  ordered.on('value', onChildAdded);
-
-  this.set = setValue;
-  this.get = getValue;
+function firstChild(val){
+  if(val === null) return null;
+  var keys = Object.keys(val);
+  if(keys.length === 0) return null;
+  return val[keys[0]];
 }
 
 module.exports = Entry;
