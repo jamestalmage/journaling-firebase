@@ -1,0 +1,30 @@
+{
+  "name": "journaling-firebase",
+  "main": "browser/journaling-firebase.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/jamestalmage/journaling-firebase",
+  "authors": [
+    "James Talmage <james.talmage@jrtechnical.com>"
+  ],
+  "description": "journaling firebase entries",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "firebase",
+    "journal",
+    "journaling"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "firebase": "~2.1.1"
+  }
+}
