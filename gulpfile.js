@@ -1,8 +1,8 @@
-var gulp = require('gulp');
+var gulp    = require('gulp');
 var plugins = require('gulp-load-plugins')();
-var karma = require('karma').server;
+var karma   = require('karma').server;
 var webpack = require('webpack');
-var argv            = require('yargs').argv;
+var argv    = require('yargs').argv;
 
 
 var v;
@@ -29,12 +29,7 @@ gulp.task('karma', function(cb){
 
 gulp.task("bundle", function() {
   return gulp.src('src/Entry.js')
-    .pipe(plugins.webpack({
-     /* webpack configuration */
-      externals: {
-        'firebase':'Firebase'
-      }
-    }))
+    .pipe(plugins.webpack(require('./webpack.conf')()))
     .pipe(plugins.rename('journaling-firebase.js'))
     .pipe(gulp.dest('browser/'));
 });
@@ -55,6 +50,23 @@ function logMochaError(err){
   }
 }
 
+gulp.task("webpack-dev-server", function(callback) {
+  // modify some webpack config options
+  var myConfig = Object.create(webpackConfig);
+  myConfig.devtool = "eval";
+  myConfig.debug = true;
+
+  // Start a webpack-dev-server
+  new WebpackDevServer(webpack(myConfig), {
+    publicPath: "/" + myConfig.output.publicPath,
+    stats: {
+      colors: true
+    }
+  }).listen(8080, "localhost", function(err) {
+      if(err) throw new gutil.PluginError("webpack-dev-server", err);
+      gutil.log("[webpack-dev-server]", "http://localhost:8080/webpack-dev-server/index.html");
+    });
+});
 
 var pkgs = ['./package.json', './bower.json'];
 gulp.task('bump', function () {

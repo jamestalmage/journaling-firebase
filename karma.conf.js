@@ -1,5 +1,10 @@
 var RewirePlugin = require("rewire-webpack");
 
+var webpackConfig = require('./webpack.conf')();
+webpackConfig.plugins = [
+  new RewirePlugin()
+];
+
 module.exports = function(config){
   config.set({
     files: [
@@ -16,15 +21,7 @@ module.exports = function(config){
       'test/**/*-test.js' : ['webpack']
     },
 
-    webpack: {
-      plugins: [
-        new RewirePlugin()
-      ],
-      externals: {
-        firebase: 'Firebase'/*,
-        mockfirebase: 'MockFirebase'   */
-      }
-    },
+    webpack: webpackConfig,
 
     webpackMiddleware: {
       // webpack-dev-middleware configuration
