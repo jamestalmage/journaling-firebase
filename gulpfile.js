@@ -1,6 +1,7 @@
 var gulp = require('gulp');
 var plugins = require('gulp-load-plugins')();
 var karma = require('karma').server;
+var webpack = require('webpack');
 
 gulp.task('test',mochaTask);
 
@@ -15,6 +16,18 @@ gulp.task('karma', function(cb){
     singleRun: false,
     autoWatch:true
   }, cb);
+});
+
+gulp.task("webpack", function() {
+  return gulp.src('src/Entry.js')
+    .pipe(plugins.webpack({
+     /* webpack configuration */
+      externals: {
+        'firebase':'Firebase'
+      }
+    }))
+    .pipe(plugins.rename('journaling-firebase.js'))
+    .pipe(gulp.dest('dist/'));
 });
 
 function mochaTask(){

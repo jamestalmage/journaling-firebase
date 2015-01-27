@@ -27,6 +27,7 @@
     "gulp": "^3.8.10",
     "gulp-load-plugins": "^0.8.0",
     "gulp-mocha": "^2.0.0",
+    "gulp-rename": "^1.2.0",
     "gulp-util": "^3.0.2",
     "gulp-webpack": "^1.1.2",
     "karma": "^0.12.31",

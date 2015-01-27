@@ -3,6 +3,7 @@ var RewirePlugin = require("rewire-webpack");
 module.exports = function(config){
   config.set({
     files: [
+      'bower_components/firebase/firebase-debug.js',
       'test/*-test.js',
       'test/**-test.js'
     ],
@@ -18,7 +19,11 @@ module.exports = function(config){
     webpack: {
       plugins: [
         new RewirePlugin()
-      ]
+      ],
+      externals: {
+        firebase: 'Firebase'/*,
+        mockfirebase: 'MockFirebase'   */
+      }
     },
 
     webpackMiddleware: {
