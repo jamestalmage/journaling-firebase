@@ -3,6 +3,14 @@ var plugins = require('gulp-load-plugins')();
 var karma = require('karma').server;
 var webpack = require('webpack');
 
+
+var v;
+function version () {
+  var previous = require('./package.json').version;
+  if (!v) v = require('semver').inc(previous, argv.type || 'patch');
+  return v;
+}
+
 gulp.task('test',mochaTask);
 
 gulp.task('watch-test',function(){
@@ -18,7 +26,7 @@ gulp.task('karma', function(cb){
   }, cb);
 });
 
-gulp.task("webpack", function() {
+gulp.task("bundle", function() {
   return gulp.src('src/Entry.js')
     .pipe(plugins.webpack({
      /* webpack configuration */
@@ -27,7 +35,7 @@ gulp.task("webpack", function() {
       }
     }))
     .pipe(plugins.rename('journaling-firebase.js'))
-    .pipe(gulp.dest('dist/'));
+    .pipe(gulp.dest('browser/'));
 });
 
 function mochaTask(){
@@ -45,3 +53,24 @@ function logMochaError(err){
     plugins.util.log.apply(gutil,arguments);
   }
 }
+
+
+var pkgs = ['./package.json'/*, './bower.json'*/];
+gulp.task('bump', function () {
+  return gulp.src(pkgs)
+    .pipe(plugins.bump({
+      version: version()
+    }))
+    .pipe(gulp.dest('./'));
+});
+
+gulp.task('release', ['bundle', 'bump'], function () {
+  var versionString = 'v' + version();
+  var message = 'Release ' + versionString;
+  return plugins.shell.task([
+    'git add -f ./browser/journaling-firebase.js',
+    'git add ' + pkgs.join(' '),
+    'git commit -m "' + message + '"',
+    'git tag ' + versionString
+  ])();
+});
