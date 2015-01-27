@@ -56,7 +56,7 @@ function logMochaError(err){
 }
 
 
-var pkgs = ['./package.json'/*, './bower.json'*/];
+var pkgs = ['./package.json', './bower.json'];
 gulp.task('bump', function () {
   return gulp.src(pkgs)
     .pipe(plugins.bump({
