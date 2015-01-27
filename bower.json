@@ -1,7 +1,7 @@
 {
   "name": "journaling-firebase",
   "main": "browser/journaling-firebase.js",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "homepage": "https://github.com/jamestalmage/journaling-firebase",
   "authors": [
     "James Talmage <james.talmage@jrtechnical.com>"

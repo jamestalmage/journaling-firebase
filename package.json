@@ -1,6 +1,6 @@
 {
   "name": "journaling-firebase",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Journaling Entries for Firebase",
   "main": "index.js",
   "scripts": {
