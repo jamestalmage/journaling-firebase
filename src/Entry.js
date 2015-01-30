@@ -23,6 +23,9 @@ Entry.prototype.key = function(){
   return this._key;
 }
 
+//Must implement or angularFire throws an exception
+Entry.prototype.transaction = noop;
+
 Entry.prototype._onChildAddedFn = function(snap){
   var key = firstChildKey(snap);
   this._events.emit('value', snap.child(key || 'nullValue').child('value'));
