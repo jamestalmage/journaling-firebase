@@ -20,7 +20,8 @@ describe('Entry',function(){
 
   it('get set works',function(){
     var value1;
-    var pp1 = new Entry(mockFbBase.push());
+    var ref = mockFbBase.push();
+    var pp1 = new Entry(ref);
     pp1.on('value',function(v){
       value1 = v.val();
     });
@@ -29,7 +30,7 @@ describe('Entry',function(){
     expect(value1).to.equal('hello');
 
     var value2;
-    var pp2 = new Entry(pp1.ref());
+    var pp2 = new Entry(ref);
     pp2.on('value',function(v){
       value2 = v.val();
     });
@@ -39,7 +40,8 @@ describe('Entry',function(){
 
   it('most recent value',function(){
     var value1;
-    var pp1 = new Entry(mockFbBase.push());
+    var ref = mockFbBase.push();
+    var pp1 = new Entry(ref);
     pp1.on('value',function(v){
       value1 = v.val();
     });
@@ -51,7 +53,7 @@ describe('Entry',function(){
     expect(value1).to.equal('goodbye');
 
     var value2;
-    var pp2 = new Entry(pp1.ref());
+    var pp2 = new Entry(ref);
     pp2.on('value',function(v){
       value2 = v.val();
     });

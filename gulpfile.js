@@ -4,6 +4,8 @@ var karma   = require('karma').server;
 var webpack = require('webpack');
 var argv    = require('yargs').argv;
 
+var WebpackDevServer = require("webpack-dev-server");
+
 
 var v;
 function version () {
@@ -52,19 +54,20 @@ function logMochaError(err){
 
 gulp.task("webpack-dev-server", function(callback) {
   // modify some webpack config options
-  var myConfig = Object.create(webpackConfig);
+  var myConfig = require('./webpack.conf')();
   myConfig.devtool = "eval";
   myConfig.debug = true;
 
   // Start a webpack-dev-server
   new WebpackDevServer(webpack(myConfig), {
-    publicPath: "/" + myConfig.output.publicPath,
+    //hot:true,
+    publicPath: "/example",
     stats: {
       colors: true
     }
   }).listen(8080, "localhost", function(err) {
-      if(err) throw new gutil.PluginError("webpack-dev-server", err);
-      gutil.log("[webpack-dev-server]", "http://localhost:8080/webpack-dev-server/index.html");
+      if(err) throw new plugins.util.PluginError("webpack-dev-server", err);
+      plugins.util.log("[webpack-dev-server]", "http://localhost:8080/webpack-dev-server/index.html");
     });
 });
 
