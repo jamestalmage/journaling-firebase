@@ -21,6 +21,18 @@ gulp.task('watch-test',function(){
   mochaTask();
 });
 
+
+gulp.task('_cover', function () {
+  return gulp.src(['./src/*.js','./src/**/*.js'])
+    .pipe(plugins.istanbul())
+    .pipe(plugins.istanbul.hookRequire());
+});
+
+gulp.task('coverage', ['_cover'], function () {
+  return mochaTask()
+    .pipe(plugins.istanbul.writeReports());
+});
+
 gulp.task('karma', function(cb){
   karma.start({
     configFile: __dirname + '/karma.conf.js',

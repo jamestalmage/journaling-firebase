@@ -7,12 +7,19 @@ function Entry(ref){
   this._ref = ref;
   this._key = ref.key();
   this._query = ref.limit(1);
-  this._query.on('value', this._onChildAddedFn, noop, this);
   this._events = new EventEmitter();
+  this._query.on('value', this._onChildAddedFn, noop, this);
 }
 
 Entry.prototype.set = function (val,cb){
-  this._ref.push().setWithPriority({value:val},Firebase.ServerValue.TIMESTAMP,cb);
+  this._ref.push().setWithPriority(
+    {
+      value:val,
+      time:Firebase.ServerValue.TIMESTAMP
+    },
+    Firebase.ServerValue.TIMESTAMP,
+    cb
+  );
 }
 
 Entry.prototype.ref = function(){
