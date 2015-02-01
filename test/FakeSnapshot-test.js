@@ -171,6 +171,24 @@ describe('FakeSnapshot',function() {
     });
   });
 
+  describe('#numChildren',function(){
+    function testNumChildren(val,expected){
+      it(JSON.stringify(val) + ' --> ' + expected, function(){
+        expect(makeSnapshot(val).numChildren()).to.equal(expected);
+      });
+    }
+
+    testNumChildren(null, 0);
+    testNumChildren(true, 0);
+    testNumChildren(false, 0);
+    testNumChildren('hello', 0);
+    testNumChildren(3, 0);
+    testNumChildren(4, 0);
+    testNumChildren(0, 0);
+    testNumChildren({a:true}, 1);
+    testNumChildren({b:true, c:false}, 2);
+  });
+
   describe('#forEach()',function(){
     it('calls in keyOrder',function(){
       var snap = makeSnapshot({wilma:'mother',fred:'father'});

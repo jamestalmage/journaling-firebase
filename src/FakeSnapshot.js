@@ -68,8 +68,7 @@ FakeSnapshot.prototype.hasChild = function(path){
 };
 
 FakeSnapshot.prototype.hasChildren = function(){
-  var val = this._val;
-  return (val || false) && typeof val === 'object' && Object.getOwnPropertyNames(val).length !== 0;
+  return this.numChildren() !== 0;
 };
 
 FakeSnapshot.prototype.key = function(){
@@ -80,7 +79,10 @@ FakeSnapshot.prototype.name = function(){
   return this.key();
 };
 
-FakeSnapshot.prototype.numChildren = function(){}
+FakeSnapshot.prototype.numChildren = function(){
+  var val = this._val;
+  return (val && typeof val === 'object' && Object.getOwnPropertyNames(val).length) || 0;
+}
 
 FakeSnapshot.prototype.ref = function(){}
 
