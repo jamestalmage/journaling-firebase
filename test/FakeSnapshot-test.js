@@ -233,6 +233,16 @@ describe('FakeSnapshot',function() {
       expect(calls).to.eql(['fred','father']);
     });
 
+    it('will returns true if shortcut',function(){
+      var snap = makeSnapshot({wilma:'mother',fred:'father'});
+      expect(snap.forEach(function(){return true;})).to.equal(true);
+    });
+
+    it('will not be true if notshortcut',function(){
+      var snap = makeSnapshot({wilma:'mother',fred:'father'});
+      expect(snap.forEach(function(){})).not.to.be.ok;
+    });
+
     it('calls in priorityOrder',function(){
       var snap = makeSnapshot({wilma:{'.priority':1,'.value':'mother'},fred:{'.priority':2,'.value':'father'}});
       var calls = [];

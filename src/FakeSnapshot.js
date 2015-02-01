@@ -63,9 +63,10 @@ FakeSnapshot.prototype.forEach = function(cb){
     snaps.sort(utils.orderByPriorityComparator);
     len = snaps.length;
     for(i = 0; i < len; i++){
-      if(cb(snaps[i]) === true) return;
+      if(cb(snaps[i]) === true) return true;
     }
   }
+  return false;
 };
 
 FakeSnapshot.prototype.hasChild = function(path){
