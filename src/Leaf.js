@@ -3,7 +3,7 @@ var EventEmitter = require('./EventEmitter');
 
 function noop(){}
 
-function Entry(ref){
+function Leaf(ref){
   this._ref = ref;
   this._key = ref.key();
   this._query = ref.limit(1);
@@ -11,7 +11,7 @@ function Entry(ref){
   this._query.on('value', this._onChildAddedFn, noop, this);
 }
 
-Entry.prototype.set = function (val,cb){
+Leaf.prototype.set = function (val,cb){
   this._ref.push().setWithPriority(
     {
       value:val,
@@ -22,33 +22,33 @@ Entry.prototype.set = function (val,cb){
   );
 }
 
-Entry.prototype.ref = function(){
+Leaf.prototype.ref = function(){
   return this;
 }
 
-Entry.prototype.key = function(){
+Leaf.prototype.key = function(){
   return this._key;
 }
 
 //Must implement or angularFire throws an exception
-Entry.prototype.transaction = noop;
+Leaf.prototype.transaction = noop;
 
-Entry.prototype._onChildAddedFn = function(snap){
+Leaf.prototype._onChildAddedFn = function(snap){
   var key = firstChildKey(snap);
   this._events.emit('value', snap.child(key || 'nullValue').child('value'));
 }
 
-Entry.prototype.on = function(eventType){
-  if(eventType !== 'value') throw new Error('only value events allowed on a journaling entry');
+Leaf.prototype.on = function(eventType){
+  if(eventType !== 'value') throw new Error('only value events allowed on a journaling leaf');
   this._events.on.apply(this._events,arguments);
 }
 
-Entry.prototype.once = function(eventType){
-  if(eventType !== 'value') throw new Error('only value events allowed on a journaling entry');
+Leaf.prototype.once = function(eventType){
+  if(eventType !== 'value') throw new Error('only value events allowed on a journaling leaf');
   this._events.once.apply(this._events,arguments);
 }
 
-Entry.prototype.off = function(){
+Leaf.prototype.off = function(){
   this._events.off.apply(this._events,arguments);
 }
 
@@ -60,4 +60,4 @@ function firstChildKey(snap){
   return keys[0];
 }
 
-module.exports = Entry;
+module.exports = Leaf;

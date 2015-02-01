@@ -7,11 +7,11 @@ describe('Entry',function(){
   chai.use(require('sinon-chai'));
   var MockFirebase = require('mockfirebase').MockFirebase;
 
-  var Entry,mockFbBase;
+  var Leaf,mockFbBase;
 
   beforeEach(function(){
-    Entry = rewire('../src/Entry');
-    Entry.__set__('Firebase',MockFirebase);
+    Leaf = rewire('../src/Leaf');
+    Leaf.__set__('Firebase',MockFirebase);
     mockFbBase = new MockFirebase();
     var ct = 0;
     MockFirebase.setClock(function(){return ct++});
@@ -24,7 +24,7 @@ describe('Entry',function(){
   it('set() causes a "value" event to be fired',function(){
     var calls1 = [];
     var ref = mockFbBase.push();
-    var pp1 = new Entry(ref);
+    var pp1 = new Leaf(ref);
     pp1.on('value',function(v){
       calls1.push(v.val());
     });
@@ -33,7 +33,7 @@ describe('Entry',function(){
     expect(calls1).to.eql([null,'hello']);
 
     var calls2 = [];
-    var pp2 = new Entry(ref);
+    var pp2 = new Leaf(ref);
     pp2.on('value',function(v){
       calls2.push(v.val());
     });
@@ -44,7 +44,7 @@ describe('Entry',function(){
   it('set(null) will cause listeners to receive a value event',function(){
     var calls1 = [];
     var ref = mockFbBase.push();
-    var entry = new Entry(ref);
+    var entry = new Leaf(ref);
     entry.on('value',function(v){
       calls1.push(v.val());
     });
@@ -58,7 +58,7 @@ describe('Entry',function(){
   it('subsequent entries for the same ref will see the most recent value',function(){
     var calls1 = [];
     var ref = mockFbBase.push();
-    var pp1 = new Entry(ref);
+    var pp1 = new Leaf(ref);
     pp1.on('value',function(v){
       calls1.push(v.val());
     });
@@ -69,7 +69,7 @@ describe('Entry',function(){
     expect(calls1).to.eql([null,'hello','goodbye']);
 
     var calls2 = [];
-    var pp2 = new Entry(ref);
+    var pp2 = new Leaf(ref);
     pp2.on('value',function(v){
       calls2.push(v.val());
     });
@@ -79,13 +79,13 @@ describe('Entry',function(){
 
   it('#key() should return the key of the ref',function(){
     var ref = mockFbBase.child('testKey');
-    var entry = new Entry(ref);
+    var entry = new Leaf(ref);
     expect(entry.key()).to.equal('testKey');
   });
 
   it('#ref() should return the entry itself',function(){
     var ref = mockFbBase.push();
-    var entry = new Entry(ref);
+    var entry = new Leaf(ref);
     expect(entry.ref()).to.equal(entry);
   });
 
@@ -94,7 +94,7 @@ describe('Entry',function(){
       var ref = mockFbBase.push();
       ref.push().setWithPriority({value:1,time:2},2);
       ref.flush();
-      var entry = new Entry(ref);
+      var entry = new Leaf(ref);
       var spy = sinon.spy(function(snap){
         expect(snap.val()).to.equal(1);
       });
@@ -107,7 +107,7 @@ describe('Entry',function(){
 
     it('throws an error if you try any eventType besides "value"',function(){
       var ref = mockFbBase.push();
-      var entry = new Entry(ref);
+      var entry = new Leaf(ref);
       expect(function(){
         entry.once('child_added',function(){});
       }).to.throw();
@@ -125,7 +125,7 @@ describe('Entry',function(){
       var ref = mockFbBase.push();
       ref.push().setWithPriority({value:1,time:2},2);
       ref.flush();
-      var entry = new Entry(ref);
+      var entry = new Leaf(ref);
       var spy = sinon.spy(function(snap){
         expect(snap.val() == 1 || snap.val() == 3).to.equal(true);
       });
@@ -138,7 +138,7 @@ describe('Entry',function(){
 
     it('throws an error if you try any eventType besides "value"',function(){
       var ref = mockFbBase.push();
-      var entry = new Entry(ref);
+      var entry = new Leaf(ref);
       expect(function(){
         entry.on('child_added',function(){});
       }).to.throw();
@@ -150,7 +150,7 @@ describe('Entry',function(){
       var ref = mockFbBase.push();
       ref.push().setWithPriority({value:1,time:2},2);
       ref.flush();
-      var entry = new Entry(ref);
+      var entry = new Leaf(ref);
       var spy = sinon.spy();
       entry.on('value',spy);
       ref.flush();
