@@ -222,6 +222,8 @@ describe('utils',function(){
     testCopy({".priority":1,a:true,b:false},{a:true,b:false});
     testCopy({a:{".priority":1,".value":true}},{a:true});
     testCopy(undefined,null);
+    testCopy({a:null,b:null},null);
+    testCopy({a:null,b:null,c:{a:null}},null);
 
     it('does not delete metavars from the input',function(){
       var input = {'.priority':1, a:true, b:false};

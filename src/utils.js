@@ -85,13 +85,18 @@ function valueCopy(val){
   if(typeof val != 'object') return val;
   var copy = {};
   var child;
+  var noValues = true;
   for(var i in val){
     if(val.hasOwnProperty(i)){
-      child = val[i];
-      if(child || (child !== null && child !== undefined)){
+      child = valueCopy(val[i]);
+      if(child !== null){
+        noValues = false;
         copy[i] = valueCopy(child);
       }
     }
+  }
+  if(noValues){
+    return null;
   }
   delete copy['.priority'];
   return copy;

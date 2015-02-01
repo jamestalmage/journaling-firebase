@@ -251,4 +251,26 @@ describe('FakeSnapshot',function() {
       expect(calls).to.eql([]);
     });
   });
+
+  describe('#exists',function(){
+    it('false if value is null',function(){
+      expect(makeSnapshot(null).exists()).to.equal(false);
+    });
+
+    it('true if it has a value',function(){
+      expect(makeSnapshot('').exists()).to.equal(true);
+      expect(makeSnapshot(0).exists()).to.equal(true);
+      expect(makeSnapshot(false).exists()).to.equal(true);
+      expect(makeSnapshot('hello').exists()).to.equal(true);
+      expect(makeSnapshot(1).exists()).to.equal(true);
+      expect(makeSnapshot(true).exists()).to.equal(true);
+      expect(makeSnapshot({a:'true'}).exists()).to.equal(true);
+    });
+
+    it('on children',function(){
+      var snap = makeSnapshot({a: true});
+      expect(snap.child('a').exists()).to.equal(true);
+      expect(snap.child('b').exists()).to.equal(false);
+    });
+  });
 });
