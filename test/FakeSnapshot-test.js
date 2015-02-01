@@ -110,4 +110,26 @@ describe('FakeSnapshot',function() {
       }).to.throw();
     });
   });
+
+  describe('#getPriority()',function(){
+    it('can be set as third arg to constructor',function(){
+      expect(makeSnapshot('hello',3).getPriority()).to.equal(3);
+      expect(makeSnapshot('hello',0).getPriority()).to.equal(0);
+      expect(makeSnapshot('hello').getPriority()).to.equal(null);
+      expect(makeSnapshot('hello',null).getPriority()).to.equal(null);
+      expect(makeSnapshot('hello','').getPriority()).to.equal('');
+      expect(makeSnapshot('hello','test').getPriority()).to.equal('test');
+    });
+
+    it('can be set as ".priority" value',function(){
+      expect(makeSnapshot({'.value':3,'.priority':3}).getPriority()).to.equal(3);
+      expect(makeSnapshot({'.value':3,'.priority':''}).getPriority()).to.equal('');
+      expect(makeSnapshot({'.value':3,'.priority':0}).getPriority()).to.equal(0);
+      expect(makeSnapshot({'.value':3,'.priority':null}).getPriority()).to.equal(null);
+    });
+
+    it('can be set for children with ".priority" value',function(){
+      expect(makeSnapshot({a:{'.value':3,'.priority':2}}).child('a').getPriority()).to.equal(2);
+    });
+  });
 });
