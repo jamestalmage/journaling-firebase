@@ -132,4 +132,30 @@ describe('FakeSnapshot',function() {
       expect(makeSnapshot({a:{'.value':3,'.priority':2}}).child('a').getPriority()).to.equal(2);
     });
   });
+
+  describe('#hasChild',function(){
+    it('is true if child exists',function(){
+      expect(makeSnapshot({a:'a'}).hasChild('a')).to.equal(true);
+    });
+
+    it('is false if child does not exist',function(){
+      expect(makeSnapshot({a:'a'}).hasChild('b')).to.equal(false);
+    });
+  });
+
+  describe('#hasChildren()',function(){
+    it('false if location has no data',function(){
+      expect(makeSnapshot(null).hasChildren()).to.equal(false);
+    });
+
+    it('false if location contains a primitive',function(){
+      expect(makeSnapshot('hello').hasChildren()).to.equal(false);
+      expect(makeSnapshot(3).hasChildren()).to.equal(false);
+      expect(makeSnapshot(true).hasChildren()).to.equal(false);
+    });
+
+    it('is true if object contains at least one value',function(){
+      expect(makeSnapshot({a:'a'}).hasChildren()).to.equal(true);
+    });
+  });
 });

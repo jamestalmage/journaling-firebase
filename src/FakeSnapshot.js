@@ -30,7 +30,7 @@ FakeSnapshot.prototype.val = function(){
   return copy(this._val);
 };
 
-FakeSnapshot.prototype.child = function(path){
+FakeSnapshot.prototype._childVal = function(path){
   utils.validatePath(path);
   var pathArray = path.split('/');
   var val = this._export;
@@ -40,7 +40,11 @@ FakeSnapshot.prototype.child = function(path){
     val = val[pathArray[i]];
     i++;
   }
-  return new FakeSnapshot(this._uri+'/' + path, i < len ? null : val);
+  return i < len ? null : (val === undefined ? null : val);
+};
+
+FakeSnapshot.prototype.child = function(path){
+  return new FakeSnapshot(this._uri + '/' + path, this._childVal(path));
 };
 
 FakeSnapshot.prototype.forEach = function(){
@@ -48,9 +52,13 @@ FakeSnapshot.prototype.forEach = function(){
 };
 
 FakeSnapshot.prototype.hasChild = function(path){
+  return this._childVal(path) !== null;
 }
 
-FakeSnapshot.prototype.hasChildren = function(){}
+FakeSnapshot.prototype.hasChildren = function(){
+  var val = this._val;
+  return (val || false) && typeof val === 'object' && Object.getOwnPropertyNames(val).length !== 0;
+}
 
 FakeSnapshot.prototype.key = function(){
   return this._key;
