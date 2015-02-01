@@ -13,6 +13,18 @@ describe('FakeSnapshot',function() {
     return new FakeSnapshot('https://blah.com/test',val,pri);
   }
 
+  describe('#key()',function(){
+    it(' is described by the URI',function(){
+      expect(new FakeSnapshot('https://blah.com/test','a').key()).to.equal('test');
+      expect(new FakeSnapshot('https://blah.com/','a').key()).to.equal(null);
+    });
+
+    it(' is aliased by #name()',function(){
+      expect(new FakeSnapshot('https://blah.com/test','a').name()).to.equal('test');
+      expect(new FakeSnapshot('https://blah.com/','a').name()).to.equal(null);
+    });
+  });
+
   describe('#val()',function(){
     it('returns the boolean value passed to constructor', function(){
       var snap = makeSnapshot(true);
@@ -156,6 +168,45 @@ describe('FakeSnapshot',function() {
 
     it('is true if object contains at least one value',function(){
       expect(makeSnapshot({a:'a'}).hasChildren()).to.equal(true);
+    });
+  });
+
+  describe('#forEach()',function(){
+    it('calls in keyOrder',function(){
+      var snap = makeSnapshot({wilma:'mother',fred:'father'});
+      var calls = [];
+      snap.forEach(function(snap){
+        calls.push(snap.key(), snap.val());
+      });
+      expect(calls).to.eql(['fred','father','wilma','mother']);
+    });
+
+    it('shortcut by returning true',function(){
+      var snap = makeSnapshot({wilma:'mother',fred:'father'});
+      var calls = [];
+      snap.forEach(function(snap){
+        calls.push(snap.key(), snap.val());
+        return true;
+      });
+      expect(calls).to.eql(['fred','father']);
+    });
+
+    it('calls in priorityOrder',function(){
+      var snap = makeSnapshot({wilma:{'.priority':1,'.value':'mother'},fred:{'.priority':2,'.value':'father'}});
+      var calls = [];
+      snap.forEach(function(snap){
+        calls.push(snap.key(), snap.val());
+      });
+      expect(calls).to.eql(['wilma','mother','fred','father']);
+    });
+
+    it('nothing happens for null value',function(){
+      var snap = makeSnapshot(null);
+      var calls = [];
+      snap.forEach(function(snap){
+        calls.push(snap.key(), snap.val());
+      });
+      expect(calls).to.eql([]);
     });
   });
 });
