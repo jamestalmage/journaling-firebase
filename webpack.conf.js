@@ -16,7 +16,8 @@ module.exports = function(){
       library: "JournalingFirebase",
     },
     externals: {
-      firebase: 'Firebase'/*,
+      firebase: 'Firebase',
+      sinon:'sinon'/*,
        mockfirebase: 'MockFirebase'   */
     }
   };

@@ -9,6 +9,7 @@ module.exports = function(config){
   config.set({
     files: [
       'bower_components/firebase/firebase-debug.js',
+      'node_modules/sinon/pkg/sinon.js',
       'test/*-test.js',
       'test/**-test.js'
     ],
@@ -29,10 +30,15 @@ module.exports = function(config){
       noInfo: true
     },
 
-    reporters: ['mocha']
+    reporters: ['mocha'],
 
-    //plugins: [
-    //  require('karma-webpack')
-   // ]
+    logLevel:'LOG_DEBUG',
+
+    plugins: [
+      require('karma-webpack'),
+      require('karma-mocha'),
+      require('karma-chrome-launcher'),
+      require('karma-mocha-reporter')
+    ]
   })
 };
