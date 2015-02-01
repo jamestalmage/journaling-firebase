@@ -14,8 +14,8 @@ describe('utils',function(){
     }
 
     function compareKeys(a,b){
-      var snapA = new Snapshot('testValue',a);
-      var snapB = new Snapshot('testValue',b);
+      var snapA = new Snapshot('https://mock/test/' + a ,'testValue');
+      var snapB = new Snapshot('https://mock/test/' + b ,'testValue');
       return utils.orderByKeyComparator(snapA,snapB);
     }
 
@@ -72,8 +72,8 @@ describe('utils',function(){
     }
 
     function comparePriorities(key1,priority1,key2,priority2){
-      var snapA = new Snapshot('testValue',key1,priority1);
-      var snapB = new Snapshot('testValue',key2,priority2);
+      var snapA = new Snapshot('https://mock/test/' + key1 ,'testValue',priority1);
+      var snapB = new Snapshot('https://mock/test/' + key2 ,'testValue',priority2);
       return utils.orderByPriorityComparator(snapA,snapB);
     }
 
@@ -131,8 +131,9 @@ describe('utils',function(){
       var d2 = {};
       d1[child] = val1;
       d2[child] = val2;
-      var snapA = new Snapshot(d1,key1);
-      var snapB = new Snapshot(d2,key2);
+      var snapA = new Snapshot('https://mock/test/' + key1, d1);
+      var snapB = new Snapshot('https://mock/test/' + key2, d2);
+
       return utils.orderByChildComparator(child)(snapA,snapB);
     }
 
@@ -295,5 +296,32 @@ describe('utils',function(){
     assertInvalidValue({'#something':true});
     assertInvalidValue({'[something':true});
     assertInvalidValue({']something':true});
+  });
+
+  describe('#parseUri',function(){
+    it('returns key',function(){
+      expect(utils.parseUri('https://something.com/test').key).to.equal('test');
+      expect(utils.parseUri('https://something.com/test2').key).to.equal('test2');
+      expect(utils.parseUri('https://something.com/test3/').key).to.equal('test3');
+      expect(utils.parseUri('https://something.com/a/test4/').key).to.equal('test4');
+      expect(utils.parseUri('https://something.com/').key).to.equal(null);
+      expect(utils.parseUri('https://something.com').key).to.equal(null);
+    });
+
+    it('returns parent',function(){
+      expect(utils.parseUri('https://something.com/test').parent).to.equal('https://something.com');
+      expect(utils.parseUri('https://blah.com/test2').parent).to.equal('https://blah.com');
+      expect(utils.parseUri('https://something.com/test3/').parent).to.equal('https://something.com');
+      expect(utils.parseUri('https://something.com/').parent).to.equal(null);
+      expect(utils.parseUri('https://something.com').parent).to.equal(null);
+    });
+
+    it('returns uri',function(){
+      expect(utils.parseUri('https://something.com/test').uri).to.equal('https://something.com/test');
+      expect(utils.parseUri('https://blah.com/test2').uri).to.equal('https://blah.com/test2');
+      expect(utils.parseUri('https://something.com/test3/').uri).to.equal('https://something.com/test3');
+      expect(utils.parseUri('https://something.com/').uri).to.equal('https://something.com');
+      expect(utils.parseUri('https://something.com').uri).to.equal('https://something.com');
+    });
   });
 });

@@ -2,7 +2,8 @@
 
 var utils = require('./utils');
 
-function FakeSnapshot(val,key,pri){
+function FakeSnapshot(uri,val,pri){
+  uri = this._uri = utils.parseUri(uri);
   if(val) {
     val = utils.valueCopy(val);
     if(val.hasOwnProperty('.priority')){
@@ -14,7 +15,7 @@ function FakeSnapshot(val,key,pri){
     }
   }
   this._val = val;
-  this._key = key;
+  this._key = uri.key;
   this._pri = pri;
 }
 
@@ -36,7 +37,7 @@ FakeSnapshot.prototype.child = function(path){
     val = val[pathArray[i]];
     i++;
   }
-  return new FakeSnapshot(i < len ? null : val);
+  return new FakeSnapshot(this._uri.uri+'/' + path, i < len ? null : val);
 };
 
 FakeSnapshot.prototype.forEach = function(){

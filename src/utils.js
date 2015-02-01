@@ -117,3 +117,29 @@ function validateValue(val){
   }
 }
 exports.validateValue = validateValue;
+
+function parseUri(uri){
+  var spl = uri.split('/');
+  var i = spl.length - 1;
+  if(spl[i] === '') {
+    i--;
+    spl.pop();
+    uri = spl.join('/');;
+  }
+  if(i < 2) throw new Error(uri + ' not a valid uri.');
+  if(i == 2) {
+    return {
+      uri:uri,
+      parent:null,
+      key:null
+    }
+  }
+  var key = spl[i];
+  spl.pop();
+  return {
+    uri: uri,
+    parent: spl.join('/'),
+    key: key,
+  };
+}
+exports.parseUri = parseUri;
