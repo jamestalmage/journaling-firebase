@@ -8,10 +8,15 @@ function FakeSnapshot(uri,val,pri){
   if(val && val.hasOwnProperty('.priority')){
     pri = val['.priority'];
   }
-  if(!pri && pri !== 0 && pri !== ''){
+  if(val === null || (!pri && pri !== 0 && pri !== '')){
     pri = null;
   }
   if(pri !== null){
+    if(!val || typeof val !== 'object'){
+      val = {
+        '.value':val
+      };
+    }
     val['.priority'] = pri;
   }
   this._export = val;
@@ -82,15 +87,17 @@ FakeSnapshot.prototype.name = function(){
 FakeSnapshot.prototype.numChildren = function(){
   var val = this._val;
   return (val && typeof val === 'object' && Object.getOwnPropertyNames(val).length) || 0;
-}
+};
 
-FakeSnapshot.prototype.ref = function(){}
+FakeSnapshot.prototype.ref = function(){};
 
 FakeSnapshot.prototype.getPriority = function(){
   return this._pri;
-}
+};
 
-FakeSnapshot.prototype.exportVal = function(){}
+FakeSnapshot.prototype.exportVal = function(){
+  return copy(this._export);
+};
 
 module.exports = FakeSnapshot;
 

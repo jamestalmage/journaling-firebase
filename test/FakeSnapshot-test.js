@@ -189,6 +189,30 @@ describe('FakeSnapshot',function() {
     testNumChildren({b:true, c:false}, 2);
   });
 
+  describe('#exportVal',function(){
+    function testExportVal(val,pri,expected){
+      if(expected === undefined){
+        expected = pri;
+        pri = undefined;
+      }
+      var message = 'snap(' + JSON.stringify(val) +
+        (pri === undefined ? '' : ', ' + JSON.stringify(pri)) + ') --> ' + JSON.stringify(expected);
+      it(message,function(){
+        expect(makeSnapshot(val,pri).exportVal()).to.eql(expected);
+      });
+    }
+
+    testExportVal(null,null);
+    testExportVal(null,0,null);
+    testExportVal(0,0,{'.value':0,'.priority':0});
+    testExportVal(0,2,{'.value':0,'.priority':2});
+    testExportVal('',2,{'.value':'','.priority':2});
+    testExportVal('','',{'.value':'','.priority':''});
+    testExportVal(3,3);
+    testExportVal(3,5,{'.value':3,'.priority':5});
+    testExportVal({a:'a',b:'b'},3, {a:'a',b:'b','.priority':3});
+  });
+
   describe('#forEach()',function(){
     it('calls in keyOrder',function(){
       var snap = makeSnapshot({wilma:'mother',fred:'father'});
