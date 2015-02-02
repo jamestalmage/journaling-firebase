@@ -121,7 +121,7 @@ describe('Entry',function(){
   });
 
   describe('#on',function(){
-    it('adds a once listener to the ref',function(){
+    it('adds a listener to the ref',function(){
       var ref = mockFbBase.push();
       ref.push().setWithPriority({value:1,time:2},2);
       ref.flush();
@@ -142,6 +142,18 @@ describe('Entry',function(){
       expect(function(){
         entry.on('child_added',function(){});
       }).to.throw();
+    });
+
+    it('works with autoflush',function(){
+      var ref = mockFbBase.push();
+      ref.push({value:'hello'});
+      ref.autoFlush(true);
+      var leaf = new Leaf(ref);
+      var val;
+      leaf.on('value',function(snap){
+        val = snap.val();
+      });
+      expect(val).to.equal('hello');
     });
   });
 

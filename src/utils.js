@@ -82,6 +82,11 @@ function cloneWithPriority(val,pri){
   if(val && val.hasOwnProperty('.priority')){
     pri = val['.priority'];
   }
+  return mergePriority(val,pri);
+}
+exports.cloneWithPriority = cloneWithPriority;
+
+function mergePriority(val,pri){
   if(val === null || (!pri && pri !== 0 && pri !== '')){
     pri = null;
   }
@@ -95,7 +100,7 @@ function cloneWithPriority(val,pri){
   }
   return val;
 }
-exports.cloneWithPriority = cloneWithPriority;
+exports.mergePriority = mergePriority;
 
 function extractPriority(val){
   return (val && val.hasOwnProperty('.priority')) ? val['.priority'] : null;

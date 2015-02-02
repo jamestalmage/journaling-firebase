@@ -8,7 +8,7 @@ function Leaf(ref){
   this._key = ref.key();
   this._query = ref.limit(1);
   this._events = new EventEmitter();
-  this._query.on('value', this._onChildAddedFn, noop, this);
+  this._query.on('value', this._onValueFn, noop, this);
 }
 
 Leaf.prototype.set = function (val,cb){
@@ -33,19 +33,35 @@ Leaf.prototype.key = function(){
 //Must implement or angularFire throws an exception
 Leaf.prototype.transaction = noop;
 
-Leaf.prototype._onChildAddedFn = function(snap){
+Leaf.prototype._onValueFn = function(snap){
   var key = firstChildKey(snap);
-  this._events.emit('value', snap.child(key || 'nullValue').child('value'));
+  this._currentValue = snap.child(key || 'nullValue').child('value');
+  this._events.emit('value', this._currentValue);
 }
 
-Leaf.prototype.on = function(eventType){
+Leaf.prototype.on = function(eventType, callback, cancelCallback, context){
   if(eventType !== 'value') throw new Error('only value events allowed on a journaling leaf');
+  if(arguments.length == 3 && typeof cancelCallback != 'function'){
+    context = cancelCallback;
+    // cancelCallback = noop;
+  }
+  if(this._currentValue){
+    callback.call(context,this._currentValue);
+  }
   this._events.on.apply(this._events,arguments);
 }
 
-Leaf.prototype.once = function(eventType){
+Leaf.prototype.once = function(eventType, callback, cancelCallback, context){
   if(eventType !== 'value') throw new Error('only value events allowed on a journaling leaf');
-  this._events.once.apply(this._events,arguments);
+  if(arguments.length == 3 && typeof cancelCallback != 'function'){
+    context = cancelCallback;
+    // cancelCallback = noop;
+  }
+  if(this._currentValue){
+    callback.call(this,this._currentValue);
+  } else {
+    this._events.once.apply(this._events,arguments);
+  }
 }
 
 Leaf.prototype.off = function(){
