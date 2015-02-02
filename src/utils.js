@@ -73,9 +73,34 @@ exports.orderByChildComparator = function(child){
 };
 
 function clone(val){
-  return JSON.parse(JSON.stringify(val));
+  return val === undefined ? null : JSON.parse(JSON.stringify(val));
 }
 exports.clone = clone;
+
+function cloneWithPriority(val,pri){
+  val = clone(val);
+  if(val && val.hasOwnProperty('.priority')){
+    pri = val['.priority'];
+  }
+  if(val === null || (!pri && pri !== 0 && pri !== '')){
+    pri = null;
+  }
+  if(pri !== null){
+    if(!val || typeof val !== 'object'){
+      val = {
+        '.value':val
+      };
+    }
+    val['.priority'] = pri;
+  }
+  return val;
+}
+exports.cloneWithPriority = cloneWithPriority;
+
+function extractPriority(val){
+  return (val && val.hasOwnProperty('.priority')) ? val['.priority'] : null;
+}
+exports.extractPriority = extractPriority;
 
 function valueCopy(val){
   if(!val) return val === undefined ? null : val;

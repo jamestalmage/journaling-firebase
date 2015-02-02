@@ -4,21 +4,8 @@ var utils = require('./utils');
 
 function FakeSnapshot(uri,val,pri){
   uri = utils.parseUri(uri);
-  val = copy(val);
-  if(val && val.hasOwnProperty('.priority')){
-    pri = val['.priority'];
-  }
-  if(val === null || (!pri && pri !== 0 && pri !== '')){
-    pri = null;
-  }
-  if(pri !== null){
-    if(!val || typeof val !== 'object'){
-      val = {
-        '.value':val
-      };
-    }
-    val['.priority'] = pri;
-  }
+  val = utils.cloneWithPriority(val,pri);
+  pri = utils.extractPriority(val);
   this._export = val;
   this._val = utils.valueCopy(val);
   this._key = uri.key;
@@ -32,7 +19,7 @@ FakeSnapshot.prototype.exists = function(){
 };
 
 FakeSnapshot.prototype.val = function(){
-  return copy(this._val);
+  return utils.clone(this._val);
 };
 
 FakeSnapshot.prototype._childVal = function(path){
@@ -97,13 +84,7 @@ FakeSnapshot.prototype.getPriority = function(){
 };
 
 FakeSnapshot.prototype.exportVal = function(){
-  return copy(this._export);
+  return utils.clone(this._export);
 };
 
 module.exports = FakeSnapshot;
-
-
-
-function copy(val){
-  return val === undefined ? null : JSON.parse(JSON.stringify(val));
-}
