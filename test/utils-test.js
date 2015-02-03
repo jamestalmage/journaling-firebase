@@ -328,12 +328,35 @@ describe('utils',function(){
   });
 
   describe('#mergeCopy',function(){
-    it('merges deep primitive',function(){
+    it('merges deep primitive', function(){
       var original = {a:'a', b:{c:'d', e:'d'}};
       var path = 'b/e'.split('/');
       var result = utils.mergeCopy(original,path,'f');
       expect(original).to.eql({a:'a', b:{c:'d', e:'d'}});
       expect(result).to.eql({a:'a', b:{c:'d', e:'f'}});
+    });
+
+    it('returns original if no change', function(){
+      var original = {a:'a', b:{c:'d', e:'d'}};
+      var path = 'b/e'.split('/');
+      var result = utils.mergeCopy(original,path,'d');
+      expect(result).to.equal(original);
+      expect(result).to.eql({a:'a', b:{c:'d', e:'d'}});
+    });
+
+    it('creates intermittent values', function(){
+      var original = {a:'a', b:'b'};
+      var path = 'c/d/e/f'.split('/');
+      var result = utils.mergeCopy(original,path,'g');
+      expect(result).to.eql({a:'a',b:'b',c:{d:{e:{f:'g'}}}});
+    });
+
+    it('deletes empty chains', function(){
+      var original = {a:'a',b:{c:{d:'e'}}};
+      var path = 'b/c/d'.split('/');
+      var result = utils.mergeCopy(original,path,null);
+      expect(result).to.eql({a:'a'});
+
     });
   });
 });

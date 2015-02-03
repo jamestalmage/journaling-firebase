@@ -180,13 +180,13 @@ function parseUri(uri){
 exports.parseUri = parseUri;
 
 function mergeCopy(orginalData, path, value){
-  return _mergeCopy(orginalData, path.slice().reverse(), value);
+  return _mergeCopy(orginalData, path.slice().reverse(), value === undefined ? null : value);
 }
 
 function _mergeCopy(originalData, path, value){
   if(path.length){
     var propName = path.pop();
-    var originalProp = originalData[propName];
+    var originalProp = (originalData && originalData[propName]) || null;
     var copyProp = _mergeCopy(originalProp, path, value);
     if(copyProp === originalProp) {
       return originalData;
@@ -195,8 +195,19 @@ function _mergeCopy(originalData, path, value){
     for(var i in originalData){
       copy[i] = originalData[i];
     }
-    copy[propName] = copyProp;
-    return copy;
+    if(copyProp === null){
+      delete copy[propName];
+      for(var j in copy){
+        if(j !== '.priority'){
+          return copy;
+        }
+      }
+      return null;
+    }
+    else {
+      copy[propName] = copyProp;
+      return copy;
+    }
   }
   else {
     return value;
