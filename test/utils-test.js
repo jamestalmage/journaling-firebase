@@ -326,4 +326,14 @@ describe('utils',function(){
       expect(utils.parseUri('https://something.com').uri).to.equal('https://something.com');
     });
   });
+
+  describe('#mergeCopy',function(){
+    it('merges deep primitive',function(){
+      var original = {a:'a', b:{c:'d', e:'d'}};
+      var path = 'b/e'.split('/');
+      var result = utils.mergeCopy(original,path,'f');
+      expect(original).to.eql({a:'a', b:{c:'d', e:'d'}});
+      expect(result).to.eql({a:'a', b:{c:'d', e:'f'}});
+    });
+  });
 });

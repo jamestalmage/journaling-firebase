@@ -159,7 +159,7 @@ function parseUri(uri){
   if(spl[i] === '') {
     i--;
     spl.pop();
-    uri = spl.join('/');;
+    uri = spl.join('/');
   }
   if(i < 2) throw new Error(uri + ' not a valid uri.');
   if(i == 2) {
@@ -174,7 +174,32 @@ function parseUri(uri){
   return {
     uri: uri,
     parent: spl.join('/'),
-    key: key,
+    key: key
   };
 }
 exports.parseUri = parseUri;
+
+function mergeCopy(orginalData, path, value){
+  return _mergeCopy(orginalData, path.slice().reverse(), value);
+}
+
+function _mergeCopy(originalData, path, value){
+  if(path.length){
+    var propName = path.pop();
+    var originalProp = originalData[propName];
+    var copyProp = _mergeCopy(originalProp, path, value);
+    if(copyProp === originalProp) {
+      return originalData;
+    }
+    var copy = {};
+    for(var i in originalData){
+      copy[i] = originalData[i];
+    }
+    copy[propName] = copyProp;
+    return copy;
+  }
+  else {
+    return value;
+  }
+}
+exports.mergeCopy = mergeCopy;
