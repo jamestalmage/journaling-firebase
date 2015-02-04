@@ -16,7 +16,7 @@ function comparePriorities (a, b) {
     }
   }
   return 0;
-};
+}
 
 function orderByKey(snap1, snap2) {
   var key1 = snap1.key();
@@ -193,7 +193,9 @@ function _mergeCopy(originalData, path, value){
     }
     var copy = {};
     for(var i in originalData){
-      copy[i] = originalData[i];
+      if(originalData.hasOwnProperty(i)){
+        copy[i] = originalData[i];
+      }
     }
     if(copyProp === null){
       delete copy[propName];

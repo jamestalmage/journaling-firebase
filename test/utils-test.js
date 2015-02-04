@@ -356,7 +356,17 @@ describe('utils',function(){
       var path = 'b/c/d'.split('/');
       var result = utils.mergeCopy(original,path,null);
       expect(result).to.eql({a:'a'});
+    });
 
+    it('does not copy values from prototype', function(){
+      function Constructor(a,b){
+        this.a = a;
+        this.b = b;
+      }
+      Constructor.prototype.c = 'c';
+      var original = {d:new Constructor('a','b')};
+      var result = utils.mergeCopy(original, ['d','e'],'e');
+      expect(result).to.eql({d:{a:'a',b:'b',e:'e'}}); //c is not copied.
     });
   });
 });
