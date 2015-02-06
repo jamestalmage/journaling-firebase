@@ -88,14 +88,15 @@ function callListeners(path, value, oldValue, listeners){
     for(i in oldValue){
       if (!keyCache[i] && oldValue.hasOwnProperty(i) && i.charAt(0) !== '.'){
         keyCache[i] = true;
+        changed = true;
         path.push(i);
 
-        changed = callListeners(
+        callListeners(
           path,
           null, // we know the new value does not have this property
           oldValue[i],
           listeners && listeners[i]
-        ) || changed;
+        );
 
         path.pop();
       }
