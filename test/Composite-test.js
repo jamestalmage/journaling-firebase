@@ -37,7 +37,7 @@ describe('Composite',function(){
     var comp = new Composite(compositeARef,storageRef);
     var val;
     comp.on('value',function(snap){
-      console.log('blah')
+      console.log('blah');
       val = snap.val();
       expect(val).to.eql({a:'a',b:'b'});
       cb();

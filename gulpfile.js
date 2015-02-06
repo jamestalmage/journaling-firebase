@@ -102,3 +102,10 @@ gulp.task('release', ['bundle', 'bump'], function () {
     'git tag ' + versionString
   ])();
 });
+
+gulp.task('lint', function(){
+   return gulp.src(['src/*.js','test/*.js'])
+     .pipe(plugins.jshint())
+     //.pipe(plugins.jshint.reporter());
+     .pipe(plugins.jshint.reporter('jshint-stylish'));
+});

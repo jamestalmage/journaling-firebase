@@ -130,7 +130,7 @@ function valueCopy(val){
   }
   delete copy['.priority'];
   return copy;
-};
+}
 exports.valueCopy = valueCopy;
 
 var invalidPath = /[\.\][#$]/;
@@ -167,7 +167,7 @@ function parseUri(uri){
       uri:uri,
       parent:null,
       key:null
-    }
+    };
   }
   var key = spl[i];
   spl.pop();

@@ -55,7 +55,7 @@ describe('FakeSnapshot',function() {
     it('returns null if constructor is passed null or undefined', function(){
       var snap = makeSnapshot(null);
       expect(snap.val()).to.equal(null);
-      var snap = makeSnapshot(undefined);
+      snap = makeSnapshot(undefined);
       expect(snap.val()).to.equal(null);
     });
 

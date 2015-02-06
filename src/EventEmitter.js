@@ -47,7 +47,7 @@ Emitter.prototype.off = function(eventType, callback, context){
   this._callbacks = this._callbacks || {};
 
   // all
-  if (0 == arguments.length) {
+  if (0 === arguments.length) {
     this._callbacks = {};
     return;
   }
@@ -77,8 +77,8 @@ Emitter.prototype.off = function(eventType, callback, context){
 
 Emitter.prototype.emit = function(eventType){
   this._callbacks = this._callbacks || {};
-  var args = [].slice.call(arguments, 1)
-    , callbacks = this._callbacks[eventType];
+  var args = [].slice.call(arguments, 1);
+  var callbacks = this._callbacks[eventType];
 
   if (callbacks) {
     callbacks = callbacks.slice(0);
@@ -118,7 +118,7 @@ Emitter.prototype.cancel = function(eventType){
 
 Emitter.prototype.listeners = function(eventType){
   this._callbacks = this._callbacks || {};
-  return (this._callbacks[eventType] || []).map(function(spec){return spec[0]});
+  return (this._callbacks[eventType] || []).map(function(spec){return spec[0];});
 };
 
 Emitter.prototype.hasListeners = function(eventType){

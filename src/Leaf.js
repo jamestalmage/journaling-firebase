@@ -20,15 +20,15 @@ Leaf.prototype.set = function (val,cb){
     Firebase.ServerValue.TIMESTAMP,
     cb
   );
-}
+};
 
 Leaf.prototype.ref = function(){
   return this;
-}
+};
 
 Leaf.prototype.key = function(){
   return this._key;
-}
+};
 
 //Must implement or angularFire throws an exception
 Leaf.prototype.transaction = noop;
@@ -37,7 +37,7 @@ Leaf.prototype._onValueFn = function(snap){
   var key = firstChildKey(snap);
   this._currentValue = snap.child(key || 'nullValue').child('value');
   this._events.emit('value', this._currentValue);
-}
+};
 
 Leaf.prototype.on = function(eventType, callback, cancelCallback, context){
   if(eventType !== 'value') throw new Error('only value events allowed on a journaling leaf');
@@ -49,7 +49,7 @@ Leaf.prototype.on = function(eventType, callback, cancelCallback, context){
     callback.call(context,this._currentValue);
   }
   this._events.on.apply(this._events,arguments);
-}
+};
 
 Leaf.prototype.once = function(eventType, callback, cancelCallback, context){
   if(eventType !== 'value') throw new Error('only value events allowed on a journaling leaf');
@@ -62,11 +62,11 @@ Leaf.prototype.once = function(eventType, callback, cancelCallback, context){
   } else {
     this._events.once.apply(this._events,arguments);
   }
-}
+};
 
 Leaf.prototype.off = function(){
   this._events.off.apply(this._events,arguments);
-}
+};
 
 function firstChildKey(snap){
   var val = snap.val();

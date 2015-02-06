@@ -27,15 +27,15 @@ function Composite(compRef,storageRef){
 Composite.prototype.on = function(eventType){
   if(eventType !== 'value') throw new Error('only value events allowed on a journaling composite');
   this._events.on.apply(this._events,arguments);
-}
+};
 
 Composite.prototype.once = function(eventType){
   if(eventType !== 'value') throw new Error('only value events allowed on a journaling composite');
   this._events.once.apply(this._events,arguments);
-}
+};
 
 Composite.prototype.off = function(){
   this._events.off.apply(this._events,arguments);
-}
+};
 
 module.exports = Composite;

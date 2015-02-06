@@ -14,7 +14,7 @@ describe('Entry',function(){
     Leaf.__set__('Firebase',MockFirebase);
     mockFbBase = new MockFirebase();
     var ct = 0;
-    MockFirebase.setClock(function(){return ct++});
+    MockFirebase.setClock(function(){return ct++;});
   });
 
   afterEach(function(){

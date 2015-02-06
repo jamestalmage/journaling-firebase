@@ -3,25 +3,25 @@ var Emitter = require('../src/EventEmitter.js');
 var expect = require('chai').expect;
 
 function Custom() {
-  Emitter.call(this)
+  Emitter.call(this);
 }
 
-Custom.prototype.__proto__ = Emitter.prototype;
+Custom.prototype = Emitter.prototype;
 
 describe('Custom', function(){
   describe('with Emitter.call(this)', function(){
     it('should work', function(done){
-      var emitter = new Custom;
+      var emitter = new Custom();
       emitter.on('foo', done);
       emitter.emit('foo');
-    })
-  })
-})
+    });
+  });
+});
 
 describe('Emitter', function(){
   describe('.on(event, fn)', function(){
     it('should add listeners', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       emitter.on('foo', function(val){
@@ -37,12 +37,12 @@ describe('Emitter', function(){
       emitter.emit('foo', 2);
 
       expect(calls).to.eql([ 'one', 1, 'two', 1, 'one', 2, 'two', 2 ]);
-    })
-  })
+    });
+  });
 
   describe('.on(event, fn, cancel', function(){
     it('should add cancel listener', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       emitter.on('foo', function(val){
@@ -57,14 +57,14 @@ describe('Emitter', function(){
       emitter.emit('foo', 3);
 
       expect(calls).to.eql([ 'call', 1, 'call', 2, 'cancel', 3 ]);
-    })
+    });
   });
 
   describe('.on(event, fn, context', function(){
     it('should add cancel listener', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
-      var one = {ctx:'one'}, two = {ctx:'two'}
+      var one = {ctx:'one'}, two = {ctx:'two'};
 
       emitter.on('foo', function(val){
         calls.push('one', val, this);
@@ -80,12 +80,12 @@ describe('Emitter', function(){
       emitter.emit('foo', 2);
 
       expect(calls).to.eql([ 'one', 1, {ctx:'one'},'two', 1, {ctx:'two'}, 'one', 2, {ctx:'one'},'two', 2, {ctx:'two'},  ]);
-    })
+    });
   });
 
   describe('.once(event, fn)', function(){
     it('should add a single-shot listener', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       emitter.once('foo', function(val){
@@ -98,12 +98,12 @@ describe('Emitter', function(){
       emitter.emit('bar', 1);
 
       expect(calls).to.eql([ 'one', 1 ]);
-    })
-  })
+    });
+  });
 
   describe('.once(event, fn, cancel)', function(){
     it('should add a single-shot listener', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       emitter.once('foo', function(val){
@@ -124,14 +124,14 @@ describe('Emitter', function(){
       emitter.emit('bar', 4);
 
       expect(calls).to.eql([ 'one', 1 , 'cancel two', 2]);
-    })
-  })
+    });
+  });
 
   describe('.once(event, fn, ctx)', function(){
     it('should add a single-shot listener', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
-      var one = {ctx:'one'}, two = {ctx:'two'}
+      var one = {ctx:'one'}, two = {ctx:'two'};
 
 
       emitter.once('foo', function(val){
@@ -144,14 +144,14 @@ describe('Emitter', function(){
       emitter.emit('foo', 4);
 
       expect(calls).to.eql([ 'one', 1, one ]);
-    })
-  })
+    });
+  });
 
   describe('.once(event, fn, cancel, ctx)', function(){
     it('should add a single-shot listener', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
-      var one = {ctx:'one'}, two = {ctx:'two'}
+      var one = {ctx:'one'}, two = {ctx:'two'};
 
 
       emitter.once('foo', function(val){
@@ -172,12 +172,12 @@ describe('Emitter', function(){
       emitter.emit('bar', 4);
 
       expect(calls).to.eql([ 'one', 1, one , 'cancel two', 2, two]);
-    })
-  })
+    });
+  });
 
   describe('.off(event, fn)', function(){
     it('should remove a listener', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       function one() { calls.push('one'); }
@@ -190,10 +190,10 @@ describe('Emitter', function(){
       emitter.emit('foo');
 
       expect(calls).to.eql([ 'one' ]);
-    })
+    });
 
     it('should work with .once()', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       function one() { calls.push('one'); }
@@ -205,11 +205,11 @@ describe('Emitter', function(){
       emitter.emit('foo');
 
       expect(calls).to.eql([]);
-    })
+    });
 
     it('should work when called from an event', function(){
-      var emitter = new Emitter
-        , called
+      var emitter = new Emitter();
+      var called = false;
       function b () {
         called = true;
       }
@@ -223,11 +223,11 @@ describe('Emitter', function(){
       emitter.emit('tobi');
       expect(called).to.be.false;
     });
-  })
+  });
 
   describe('.cancel(event)', function(){
     it('should remove all listeners', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       function one() { calls.push('one'); }
@@ -240,11 +240,11 @@ describe('Emitter', function(){
       emitter.emit('foo');
 
       expect(calls).to.eql([]);
-    })
+    });
 
     it('should work when called from an event', function(){
-      var emitter = new Emitter
-        , called
+      var emitter = new Emitter();
+      var called = false;
       function b () {
         called = true;
       }
@@ -257,13 +257,13 @@ describe('Emitter', function(){
       called = false;
       emitter.emit('tobi');
       expect(called).to.be.false;
-    })
+    });
 
     it('should call cancel functions when called from an event', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
       function cb () {
-        calls.push('called')
+        calls.push('called');
       }
       function cancelCb () {
         calls.push('cancelled');
@@ -276,12 +276,12 @@ describe('Emitter', function(){
       emitter.emit('tobi');
       emitter.emit('tobi');
       expect(calls).to.eql(['called','cancelled']);
-    })
-  })
+    });
+  });
 
   describe('.cancel()', function(){
     it('should remove all listeners', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
       function callA(){
         calls.push('callA');
@@ -303,16 +303,16 @@ describe('Emitter', function(){
       emitter.emit('a');
       emitter.emit('b');
       expect(calls).to.eql(['callA','callB','cancelA','cancelB']);
-    })
+    });
 
     it('should work if there are no listeners', function(){
       (new Emitter()).cancel();
-    })
-  })
+    });
+  });
 
   describe('.off(event, fn, ctx)', function(){
     it('should remove a listener', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
       var one = {ctx:1};
       var two = {ctx:2};
@@ -326,10 +326,10 @@ describe('Emitter', function(){
       emitter.emit('foo');
 
       expect(calls).to.eql([ 'one', {ctx:1} ]);
-    })
+    });
 
     it('should work with .once()', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
       var one = {ctx:1};
       var two = {ctx:2};
@@ -343,10 +343,10 @@ describe('Emitter', function(){
       emitter.emit('foo');
 
       expect(calls).to.eql(['one', {ctx:1}]);
-    })
+    });
 
     it('should work when called from an event', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var ctxA = {};
       var ctxB = {};
       function cb () {
@@ -365,11 +365,11 @@ describe('Emitter', function(){
       expect(ctxA.called).to.be.false;
       expect(ctxB.called).to.be.true;
     });
-  })
+  });
 
   describe('.off(event)', function(){
     it('should remove all listeners for an event', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       function one() { calls.push('one'); }
@@ -383,16 +383,16 @@ describe('Emitter', function(){
       emitter.emit('foo');
 
       expect(calls).to.eql([]);
-    })
+    });
 
     it('should do nothing if no listenrs are registered',function(){
       new Emitter().off('foo');
-    })
-  })
+    });
+  });
 
   describe('.off()', function(){
     it('should remove all listeners', function(){
-      var emitter = new Emitter;
+      var emitter = new Emitter();
       var calls = [];
 
       function one() { calls.push('one'); }
@@ -410,35 +410,35 @@ describe('Emitter', function(){
       emitter.emit('bar');
 
       expect(calls).to.eql(['one', 'two']);
-    })
+    });
 
     it('should do nothing if no listenrs are registered',function(){
       new Emitter().off();
-    })
-  })
+    });
+  });
 
   describe('.listeners(event)', function(){
     describe('when handlers are present', function(){
       it('should return an array of callbacks', function(){
-        var emitter = new Emitter;
+        var emitter = new Emitter();
         function foo(){}
         emitter.on('foo', foo);
         expect(emitter.listeners('foo')).to.eql([foo]);
-      })
-    })
+      });
+    });
 
     describe('when no handlers are present', function(){
       it('should return an empty array', function(){
-        var emitter = new Emitter;
+        var emitter = new Emitter();
         expect(emitter.listeners('foo')).to.eql([]);
-      })
-    })
-  })
+      });
+    });
+  });
 
   describe('.hasListeners(event)', function(){
     describe('when handlers are present', function(){
       it('should return true', function(){
-        var emitter = new Emitter;
+        var emitter = new Emitter();
         emitter.on('foo', function(){});
         expect(emitter.hasListeners('foo')).to.be.true;
         expect(emitter.hasListeners()).to.be.true;
@@ -447,19 +447,19 @@ describe('Emitter', function(){
 
     describe('when no handlers are present', function(){
       it('should return false if no listeners have been added', function(){
-        var emitter = new Emitter;
+        var emitter = new Emitter();
         expect(emitter.hasListeners('foo')).to.be.false;
         expect(emitter.hasListeners()).to.be.false;
       });
 
       it('should return false if no listeners have been added for the given eventType', function(){
-        var emitter = new Emitter;
+        var emitter = new Emitter();
         emitter.on('bar', function(){});
         expect(emitter.hasListeners('foo')).to.be.false;
       });
 
       it('should return false if all listeners have been removed for the given eventType', function(){
-        var emitter = new Emitter;
+        var emitter = new Emitter();
         function bar(){}
         emitter.on('foo', bar);
         emitter.off('foo',bar);
@@ -467,8 +467,8 @@ describe('Emitter', function(){
         expect(emitter.hasListeners()).to.be.false;
       });
     });
-  })
-})
+  });
+});
 
 describe('Emitter(obj)', function(){
   it('should mixin', function(done){
@@ -476,5 +476,5 @@ describe('Emitter(obj)', function(){
     Emitter(proto);
     proto.on('something', done);
     proto.emit('something');
-  })
-})
+  });
+});
