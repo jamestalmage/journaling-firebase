@@ -23,14 +23,13 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
     data = data && data[propName];
   }
 
-  var listenerProp = '.on_' + eventType;
-  if(!listeners[listenerProp]){
+  if(!listeners['.on_value']){
     path = path.slice();
     var self = this;
-    var listener = listeners[listenerProp] = function(snap){
-      self.handleCallback(path.slice(), eventType, snap);
+    var listener = listeners['.on_value'] = function(snap){
+      self.handleCallback(path.slice(), 'value', snap);
     };
-    wrapper.on(path, eventType, listener);
+    wrapper.on(path, 'value', listener);
   }
   var events = listeners['.events'] || (listeners['.events'] = new EventEmitter());
   events.on(eventType,callback);
@@ -82,6 +81,12 @@ function callListeners(path, value, oldValue, listeners){
         path.pop();
       }
     }
+    if(!changed && value.hasOwnProperty('.priority')){
+      changed = !(oldValue && (value['.priority'] === oldValue['.priority']))
+    }
+    if(!changed && value.hasOwnProperty('.value')){
+      changed = !(oldValue && (value['.value'] === oldValue['.value']))
+    }
   }
 
   if(typeof oldValue === 'object' && oldValue !== null){
@@ -100,6 +105,9 @@ function callListeners(path, value, oldValue, listeners){
 
         path.pop();
       }
+    }
+    if(!changed && oldValue.hasOwnProperty('.priority')){
+      changed = !(value && (value['.priority'] === oldValue['.priority']))
     }
   }
 

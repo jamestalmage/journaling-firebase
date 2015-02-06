@@ -327,6 +327,21 @@ describe('utils',function(){
     });
   });
 
+  describe('#mergePriority',function(){
+    it('"a",undefined === "a"',function(){
+      expect(utils.mergePriority('a')).to.equal('a');
+      expect(utils.mergePriority('a',undefined)).to.equal('a');
+    });
+
+    it('"a",3 === {".value":"a", ".priority":3"',function(){
+      expect(utils.mergePriority('a',3)).to.eql({'.value':'a','.priority':3});
+    });
+
+    it('null, 3 === null',function(){
+       expect(utils.mergePriority(null,3)).to.eql(null);
+    });
+  });
+
   describe('#mergeCopy',function(){
     it('merges deep primitive', function(){
       var original = {a:'a', b:{c:'d', e:'d'}};

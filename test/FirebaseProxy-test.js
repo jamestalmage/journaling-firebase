@@ -20,11 +20,19 @@ describe('FirebaseProxy',function(){
     spy2 = sinon.spy();
   });
 
-  function snapVal(expectedVal){
+  function snapVal(expectedVal,pri){
+    var message = 'snapshot value of ' + JSON.stringify(expectedVal);
+    var testPri = arguments.length > 1;
+    if(testPri){
+      message += ', and priority' + JSON.stringify(pri);
+    }
     return sinon.match(function(snap){
       expect(snap.val()).to.eql(expectedVal);
+      if(testPri){
+        expect(snap.getPriority()).to.equal(pri);
+      }
       return true;
-    },'snapshot value of ' + expectedVal);
+    }, message);
   }
 
   function resetSpies(){
@@ -149,7 +157,47 @@ describe('FirebaseProxy',function(){
       spy.reset();
       proxy.on_value(path1,{c:false});
       expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(false));
+    });
 
+    it('will call value listeners if priority changes but value does not',function(){
+      var path = 'https://mock/a/b'.split('/');
+      proxy.on(path,'value',spy);
+
+      proxy.on_value(path,'a',1);
+      expect(spy,'firstCall').to.have.been.calledOnce.and.calledWith(snapVal('a',1));
+      spy.reset();
+      proxy.on_value(path,'a',1);
+      expect(spy).not.to.have.been.called;
+      spy.reset();
+      proxy.on_value(path,'a',2);
+      expect(spy,'val: "a", 1 -> 2').to.have.been.calledOnce.and.calledWith(snapVal('a',2));
+      spy.reset();
+      proxy.on_value(path,'a');
+      expect(spy,'val: "a", pri: 2 -> null').to.have.been.calledOnce.and.calledWith(snapVal('a',null));
+      spy.reset();
+      proxy.on_value(path,'a',3);
+      expect(spy,'val: "a", pri: null -> 3').to.have.been.calledOnce.and.calledWith(snapVal('a',3));
+      spy.reset();
+      proxy.on_value(path,{a:'a'});
+      expect(spy,'val: "a" -> {a:"a"}, pri: 3 -> null').to.have.been.calledOnce.and.calledWith(snapVal({a:'a'},null));
+      spy.reset();
+      proxy.on_value(path,{a:'a'},4);
+      expect(spy,'val: {a:"a"}, pri: null -> 4').to.have.been.calledOnce.and.calledWith(snapVal({a:'a'},4));
+      spy.reset();
+      proxy.on_value(path,{a:'a'});
+      expect(spy,'val: {a:"a"}, pri: 4 -> null').to.have.been.calledOnce.and.calledWith(snapVal({a:'a'},null));
+    });
+
+    it('will call value listeners if primitive value changes, but non-null priority does not change',function(){
+      var path = 'https://mock/a/b'.split('/');
+      proxy.on(path,'value',spy);
+
+      proxy.on_value(path,'a',1);
+      expect(spy,'firstCall').to.have.been.calledOnce.and.calledWith(snapVal('a',1));
+      spy.reset();
+      proxy.on_value(path,'b',1);
+      expect(spy,'val: a -> b, pri:1').to.have.been.calledOnce.and.calledWith(snapVal('b',1));
+      spy.reset();
     });
 
     describe('will not re-call listeners if value does not change', function(){

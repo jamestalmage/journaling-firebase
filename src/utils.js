@@ -87,7 +87,7 @@ function cloneWithPriority(val,pri){
 exports.cloneWithPriority = cloneWithPriority;
 
 function mergePriority(val,pri){
-  if(val === null || (!pri && pri !== 0 && pri !== '')){
+  if(val === null || !(pri || pri === 0 || pri === '')){
     pri = null;
   }
   if(pri !== null){
