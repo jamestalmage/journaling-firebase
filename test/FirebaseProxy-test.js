@@ -90,6 +90,17 @@ describe('FirebaseProxy',function(){
       expect(snap2.getPriority()).to.eql(3);
     });
 
+    it('listener will be called immediately if data is already cached with a falsie value',function(){
+      var path = 'https://mock/a/b'.split('/');
+
+      proxy.on(path,'value',spy1);  // listen to the location so data will be cached
+      proxy.on_value(path,false); // provide the data to cache
+
+      proxy.on(path,'value',spy2);
+
+      expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(false));
+    });
+
     it('listener will be called immediately if data is already cached by a parent',function(){
       var path = 'https://mock/a/b'.split('/');
       var path2 = 'https://mock/a/b/c'.split('/');
@@ -103,6 +114,30 @@ describe('FirebaseProxy',function(){
       var snap2 = spy2.firstCall.args[0];
       expect(snap2.val()).to.eql('d');
       expect(snap2.key()).to.eql('c');
+    });
+
+    it('listener will be called immediately with null if already cached by parent listener',function(){
+      var path = 'https://mock/a/b'.split('/');
+      var path2 = 'https://mock/a/b/c'.split('/');
+
+      proxy.on(path,'value',spy1);  // listen to the location so data will be cached
+      proxy.on_value(path,{d:'e'}); // provide the data to cache
+
+      proxy.on(path2,'value',spy2);
+
+      expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(null,null));
+    });
+
+    it('listener will be called immediately with null if already cached by parent listener (falsy parent)',function(){
+      var path = 'https://mock/a/b'.split('/');
+      var path2 = 'https://mock/a/b/c'.split('/');
+
+      proxy.on(path,'value',spy1);  // listen to the location so data will be cached
+      proxy.on_value(path,false); // provide the data to cache
+
+      proxy.on(path2,'value',spy2);
+
+      expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(null,null));
     });
   });
 
@@ -148,7 +183,7 @@ describe('FirebaseProxy',function(){
       expect(snap2.getPriority()).to.eql(null);
     });
 
-    it('will call listeners on children (oldChild === null, newChild === false', function(){
+    it('will call listeners on children (oldChild === null, newChild === false)', function(){
       var path1 = 'https://mock/a/b'.split('/');
       var path2 = 'https://mock/a/b/c'.split('/');
       proxy.on(path2,'value',spy);

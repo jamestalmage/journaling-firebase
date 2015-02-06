@@ -16,11 +16,13 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
   var wrapper = this._wrapper;
   var listeners = this._listeners;
   var data = this._data;
+  var initialized = listeners['.initialized'];
 
   for(var i = 0, len = path.length; i < len; i++){
     var propName = path[i];
     listeners = listeners[propName] || (listeners[propName] = {});
-    data = data && data[propName];
+    initialized = initialized || (listeners && listeners['.initialized']);
+    data = (data || null) && data[propName];
   }
 
   if(!listeners['.on_value']){
@@ -34,10 +36,9 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
   var events = listeners['.events'] || (listeners['.events'] = new EventEmitter());
   events.on(eventType,callback);
 
-  if(data){
+  if(initialized){
     callback(new FakeSnapshot(path.join('/'),data));
   }
-
 };
 
 FirebaseProxy.prototype.on_value = function (path, value, priority){
