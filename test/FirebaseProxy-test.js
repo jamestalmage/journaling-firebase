@@ -140,9 +140,8 @@ describe('FirebaseProxy',function(){
       expect(snap2.getPriority()).to.eql(null);
     });
 
-    describe('will not recall listeners if value does not change', function(){
-
-      it('primitives',function(){
+    describe('will not re-call listeners if value does not change', function(){
+      it('(primitives)',function(){
         var path = 'https://mock/a/b'.split('/');
         proxy.on(path,'value',spy);
 
@@ -179,7 +178,7 @@ describe('FirebaseProxy',function(){
         expect(spy).not.to.have.been.called;
       });
 
-      it('deeply equal objects',function(){
+      it('(deeply equal objects)',function(){
         var path = 'https://mock/a/b'.split('/');
         var path1 = path.slice().concat('a');
         var path2 = path.slice().concat('b');
@@ -209,6 +208,38 @@ describe('FirebaseProxy',function(){
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal({a:'d',b:'c'}));
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('d'));
         expect(spy2).not.to.have.been.called;
+      });
+    });
+
+    describe('will call child listeners with null if there is no value for that path',function(){
+      xit('first time value',function(){
+        var path = 'https://mock/a/b'.split('/');
+        var path1 = path.slice().concat('a');
+        var path2 = path.slice().concat('b');
+        proxy.on(path,'value',spy);
+        proxy.on(path1,'value',spy1);
+        proxy.on(path2,'value',spy2);
+
+        proxy.on_value(path,null);
+        expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(null));
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
+        expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(null));
+      });
+
+      it('removal',function(){
+        var path = 'https://mock/a/b'.split('/');
+        var path1 = path.slice().concat('a');
+        var path2 = path.slice().concat('b');
+        proxy.on(path,'value',spy);
+        proxy.on(path1,'value',spy1);
+        proxy.on(path2,'value',spy2);
+
+        proxy.on_value(path,{b:'b'});
+        resetSpies(spy,spy1,spy2);
+        proxy.on_value(path,{a:'a'});
+        expect(spy).to.have.been.calledOnce.and.calledWith(snapVal({a:'a'}));
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a'));
+        expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(null));
       });
     });
   });

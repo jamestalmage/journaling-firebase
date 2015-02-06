@@ -1,3 +1,5 @@
+'use strict';
+
 var EventEmitter = require('./EventEmitter');
 var FakeSnapshot = require('./FakeSnapshot');
 var utils = require('./utils');
@@ -59,13 +61,20 @@ FirebaseProxy.prototype.on_value = function (path, value, priority){
 };
 
 function callListeners(path, value, oldValue, listeners){
+  //if(value === undefined) value = null;
+  //if(oldValue === undefined) oldValue = null;
   if(value === oldValue) return false;
 
   var changed = false;
+  //var changed = value === oldValue;
+
+  var keyCache = {};
+  var i;
 
   if(typeof value === 'object' && value !== null){
-    for(var i in value){
+    for( i in value){
       if (value.hasOwnProperty(i) && i.charAt(0) !== '.'){
+        keyCache[i] = true;
         path.push(i);
 
         changed = callListeners(
@@ -81,6 +90,39 @@ function callListeners(path, value, oldValue, listeners){
   } else {
     changed = true;
   }
+
+  if(typeof oldValue === 'object' && oldValue !== null){
+    for(i in oldValue){
+      if (!keyCache[i] && oldValue.hasOwnProperty(i) && i.charAt(0) !== '.'){
+        keyCache[i] = true;
+        path.push(i);
+
+        changed = callListeners(
+          path,
+          null, // we know the new value does not have this property
+          oldValue[i],
+          listeners && listeners[i]
+        ) || changed;
+
+        path.pop();
+      }
+    }
+  } else {
+    changed = true;
+  }
+
+  if(listeners){
+    for( i in listeners){
+      if(!keyCache[i] && listeners.hasOwnProperty(i) && i.charAt(0) !== '.'){
+        path.push(i);
+
+        callListeners(path,null,null,listeners[i]);
+
+        path.pop();
+      }
+    }
+  }
+
   if(changed){
     var events = listeners && listeners['.events'];
     if(events){
