@@ -66,18 +66,31 @@ function callListeners(path, value, oldValue, listeners){
   var keyCache = {};
   var i;
 
+  var events = listeners && listeners['.events'];
+
   if(typeof value === 'object' && value !== null){
     for( i in value){
       if (value.hasOwnProperty(i) && i.charAt(0) !== '.'){
         keyCache[i] = true;
         path.push(i);
 
-        changed = callListeners(
+        var childChanged = callListeners(
           path,
           value[i],
           oldValue && oldValue.hasOwnProperty(i) ? oldValue[i] : null,
           listeners && listeners[i]
-        ) || changed;
+        );
+        changed = childChanged || changed;
+
+
+        if(events){
+          if( !(oldValue && oldValue.hasOwnProperty(i))) {
+            events.emit('child_added', new FakeSnapshot(path.join('/'), value[i]));
+          }
+          else if(childChanged) {
+            events.emit('child_changed', new FakeSnapshot(path.join('/'), value[i]))
+          }
+        }
 
         path.pop();
       }
@@ -104,6 +117,10 @@ function callListeners(path, value, oldValue, listeners){
           listeners && listeners[i]
         );
 
+        if(events){
+          events.emit('child_removed', new FakeSnapshot(path.join('/'), oldValue[i]));
+        }
+
         path.pop();
       }
     }
@@ -128,7 +145,6 @@ function callListeners(path, value, oldValue, listeners){
     if(listeners) {
       (listeners['.initialized'] = true);
     }
-    var events = listeners && listeners['.events'];
     if(events){
       events.emit('value',new FakeSnapshot(path.join('/'),value));
     }
