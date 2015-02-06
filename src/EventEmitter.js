@@ -122,5 +122,16 @@ Emitter.prototype.listeners = function(eventType){
 };
 
 Emitter.prototype.hasListeners = function(eventType){
-  return !! this.listeners(eventType).length;
+  if(eventType){
+    return !! this.listeners(eventType).length;
+  }
+  var callbacks = this._callbacks;
+  if(callbacks){
+    for(var i in callbacks){
+      if(callbacks.hasOwnProperty(i) && this.hasListeners(i)){
+        return true;
+      }
+    }
+  }
+  return false;
 };

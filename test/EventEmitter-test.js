@@ -441,15 +441,32 @@ describe('Emitter', function(){
         var emitter = new Emitter;
         emitter.on('foo', function(){});
         expect(emitter.hasListeners('foo')).to.be.true;
-      })
-    })
+        expect(emitter.hasListeners()).to.be.true;
+      });
+    });
 
     describe('when no handlers are present', function(){
-      it('should return false', function(){
+      it('should return false if no listeners have been added', function(){
         var emitter = new Emitter;
         expect(emitter.hasListeners('foo')).to.be.false;
-      })
-    })
+        expect(emitter.hasListeners()).to.be.false;
+      });
+
+      it('should return false if no listeners have been added for the given eventType', function(){
+        var emitter = new Emitter;
+        emitter.on('bar', function(){});
+        expect(emitter.hasListeners('foo')).to.be.false;
+      });
+
+      it('should return false if all listeners have been removed for the given eventType', function(){
+        var emitter = new Emitter;
+        function bar(){}
+        emitter.on('foo', bar);
+        emitter.off('foo',bar);
+        expect(emitter.hasListeners('foo')).to.be.false;
+        expect(emitter.hasListeners()).to.be.false;
+      });
+    });
   })
 })
 

@@ -88,7 +88,7 @@ function callListeners(path, value, oldValue, listeners){
             events.emit('child_added', new FakeSnapshot(path.join('/'), value[i]));
           }
           else if(childChanged) {
-            events.emit('child_changed', new FakeSnapshot(path.join('/'), value[i]))
+            events.emit('child_changed', new FakeSnapshot(path.join('/'), value[i]));
           }
         }
 
@@ -96,10 +96,10 @@ function callListeners(path, value, oldValue, listeners){
       }
     }
     if(!changed && value.hasOwnProperty('.priority')){
-      changed = !(oldValue && (value['.priority'] === oldValue['.priority']))
+      changed = !(oldValue && (value['.priority'] === oldValue['.priority']));
     }
     if(!changed && value.hasOwnProperty('.value')){
-      changed = !(oldValue && (value['.value'] === oldValue['.value']))
+      changed = !(oldValue && (value['.value'] === oldValue['.value']));
     }
   }
 
@@ -125,7 +125,7 @@ function callListeners(path, value, oldValue, listeners){
       }
     }
     if(!changed && oldValue.hasOwnProperty('.priority')){
-      changed = !(value && (value['.priority'] === oldValue['.priority']))
+      changed = !(value && (value['.priority'] === oldValue['.priority']));
     }
   }
 
