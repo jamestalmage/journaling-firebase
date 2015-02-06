@@ -61,12 +61,7 @@ FirebaseProxy.prototype.on_value = function (path, value, priority){
 };
 
 function callListeners(path, value, oldValue, listeners){
-  //if(value === undefined) value = null;
-  //if(oldValue === undefined) oldValue = null;
-  if(value === oldValue) return false;
-
-  var changed = false;
-  //var changed = value === oldValue;
+  var changed = !(value === oldValue || ((typeof value === 'object') && (typeof oldValue === 'object')));
 
   var keyCache = {};
   var i;
@@ -87,8 +82,6 @@ function callListeners(path, value, oldValue, listeners){
         path.pop();
       }
     }
-  } else {
-    changed = true;
   }
 
   if(typeof oldValue === 'object' && oldValue !== null){
@@ -107,8 +100,6 @@ function callListeners(path, value, oldValue, listeners){
         path.pop();
       }
     }
-  } else {
-    changed = true;
   }
 
   if(listeners){
@@ -123,7 +114,10 @@ function callListeners(path, value, oldValue, listeners){
     }
   }
 
-  if(changed){
+  if(changed || (listeners && !listeners['.initialized'])){
+    if(listeners) {
+      (listeners['.initialized'] = true);
+    }
     var events = listeners && listeners['.events'];
     if(events){
       events.emit('value',new FakeSnapshot(path.join('/'),value));

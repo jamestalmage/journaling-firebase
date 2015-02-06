@@ -149,33 +149,33 @@ describe('FirebaseProxy',function(){
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal('a'));
         spy.reset();
         proxy.on_value(path,'a');
-        expect(spy).not.to.have.been.called;
+        expect(spy,'a').not.to.have.been.called;
 
         proxy.on_value(path,true);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(true));
         spy.reset();
         proxy.on_value(path,true);
-        expect(spy).not.to.have.been.called;
+        expect(spy,'true').not.to.have.been.called;
 
         proxy.on_value(path,false);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(false));
         spy.reset();
         proxy.on_value(path,false);
-        expect(spy).not.to.have.been.called;
+        expect(spy,'false').not.to.have.been.called;
 
         proxy.on_value(path,0);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(0));
         spy.reset();
         proxy.on_value(path,0);
-        expect(spy).not.to.have.been.called;
+        expect(spy,'0').not.to.have.been.called;
 
         proxy.on_value(path,1);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(1));
         spy.reset();
         proxy.on_value(path,1);
-        expect(spy).not.to.have.been.called;
+        expect(spy,'1').not.to.have.been.called;
         proxy.on_value(path,1);
-        expect(spy).not.to.have.been.called;
+        expect(spy,'1').not.to.have.been.called;
       });
 
       it('(deeply equal objects)',function(){
@@ -212,7 +212,7 @@ describe('FirebaseProxy',function(){
     });
 
     describe('will call child listeners with null if there is no value for that path',function(){
-      xit('first time value',function(){
+      it('first time value',function(){
         var path = 'https://mock/a/b'.split('/');
         var path1 = path.slice().concat('a');
         var path2 = path.slice().concat('b');
