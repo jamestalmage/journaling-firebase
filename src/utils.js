@@ -180,12 +180,12 @@ function parseUri(uri){
 exports.parseUri = parseUri;
 
 function mergeCopy(orginalData, path, value){
-  return _mergeCopy(orginalData, path.slice().reverse(), value === undefined ? null : value);
+  return _mergeCopy(orginalData, path.slice(), value === undefined ? null : value);
 }
 
 function _mergeCopy(originalData, path, value){
   if(path.length){
-    var propName = path.pop();
+    var propName = path.shift();
     var originalProp = (originalData && originalData[propName]) || null;
     var copyProp = _mergeCopy(originalProp, path, value);
     if(copyProp === originalProp) {
