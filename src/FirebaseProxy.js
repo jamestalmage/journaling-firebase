@@ -75,7 +75,7 @@ function callListeners(path, value, oldValue, listeners){
         changed = callListeners(
           path,
           value[i],
-          oldValue && oldValue.hasOwnProperty(i) && oldValue[i],
+          oldValue && oldValue.hasOwnProperty(i) ? oldValue[i] : null,
           listeners && listeners[i]
         ) || changed;
 

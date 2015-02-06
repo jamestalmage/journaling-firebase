@@ -140,6 +140,18 @@ describe('FirebaseProxy',function(){
       expect(snap2.getPriority()).to.eql(null);
     });
 
+    it('will call listeners on children (oldChild === null, newChild === false', function(){
+      var path1 = 'https://mock/a/b'.split('/');
+      var path2 = 'https://mock/a/b/c'.split('/');
+      proxy.on(path2,'value',spy);
+      proxy.on_value(path1,{a:'d'});
+      expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(null));
+      spy.reset();
+      proxy.on_value(path1,{c:false});
+      expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(false));
+
+    });
+
     describe('will not re-call listeners if value does not change', function(){
       it('(primitives)',function(){
         var path = 'https://mock/a/b'.split('/');
