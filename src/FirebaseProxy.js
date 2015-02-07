@@ -75,39 +75,41 @@ FirebaseProxy.prototype.on_value = function(path, value, priority){
 };/* */
 
 function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
-  var propName = remainingPath.shift();
-  currentPath.push(propName);
-  var propListeners = listeners && listeners[propName];
-  var oldProp = (oldValue && oldValue.hasOwnProperty(propName)) ? oldValue[propName] : null;
   var newProp;
   if(remainingPath.length){
-    newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners);
-  }
-  else {
-    newProp = callListeners(currentPath, newValue, oldProp, propListeners);
-  }
-  if(oldProp === newProp){
-    return oldValue;
-  }
 
-  var copy = {};
-  for(var i in oldValue){
-    if(oldValue.hasOwnProperty(i)){
-      copy[i] = oldValue[i];
+    var propName = remainingPath.shift();
+    currentPath.push(propName);
+    var propListeners = listeners && listeners[propName];
+    var oldProp = (oldValue && oldValue.hasOwnProperty(propName)) ? oldValue[propName] : null;
+    newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners);
+    if(oldProp === newProp){
+      return oldValue;
     }
-  }
-  if(newProp === null){
-    delete copy[propName];
-    for(var j in copy){
-      if(j !== '.priority'){
-        return copy;
+
+    var copy = {};
+    for(var i in oldValue){
+      if(oldValue.hasOwnProperty(i)){
+        copy[i] = oldValue[i];
       }
     }
-    return null;
-  }
-  else {
-    copy[propName] = newProp;
-    return copy;
+    if(newProp === null){
+      delete copy[propName];
+      for(var j in copy){
+        if(j !== '.priority'){
+          return copy;
+        }
+      }
+      return null;
+    }
+    else {
+      copy[propName] = newProp;
+      return copy;
+    }
+
+  } else {
+    newProp = callListeners(currentPath, newValue, oldValue, listeners);
+    return utils.isEqualLeafValue(oldValue, newProp) ? oldValue : newProp;
   }
 }
 
