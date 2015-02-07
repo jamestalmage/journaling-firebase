@@ -127,7 +127,7 @@ function callListeners(path, value, oldValue, listeners){
 
         var oldProp = oldValue && oldValue.hasOwnProperty(i) ? oldValue[i] : null;
         var newProp = value[i];
-        var childChanged = !(oldProp === callListeners(
+        var childChanged = (oldProp !== callListeners(
           path,
           newProp,
           oldProp,
