@@ -373,6 +373,22 @@ describe('utils',function(){
       expect(result).to.eql({a:'a'});
     });
 
+    it('returns original if no change (false === false)',function(){
+      var original = {a:'a', b:{c:'d', e:false}};
+      var path = 'b/e'.split('/');
+      var result = utils.mergeCopy(original,path,false);
+      expect(result).to.equal(original);
+      expect(result).to.eql({a:'a', b:{c:'d', e:false}});
+    });
+
+    it('returns original if no change(priorities equal)',function(){
+      var original = {a:'a', b:{c:'d', e:{'.value':'e','.priority':1}}};
+      var path = 'b/e'.split('/');
+      var result = utils.mergeCopy(original,path,{'.value':'e','.priority':1});
+      expect(result).to.equal(original);
+      expect(result).to.eql({a:'a', b:{c:'d', e:{'.value':'e','.priority':1}}});
+    });
+
     it('does not copy values from prototype', function(){
       function Constructor(a,b){
         this.a = a;

@@ -41,7 +41,7 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
   }
 };
 
-FirebaseProxy.prototype.on_value = function (path, value, priority){
+/*FirebaseProxy.prototype.on_value = function (path, value, priority){
   var listeners = this._listeners;
   var data = this._data;
 
@@ -56,9 +56,60 @@ FirebaseProxy.prototype.on_value = function (path, value, priority){
     }
   }
   var oldValue = data[propName];
-  data[propName] = value;
-  callListeners(path, value, oldValue, listeners);
-};
+  // data[propName] = value;
+  var newValue = callListeners(path, value, oldValue, listeners);
+  if(newValue !== oldValue){
+    this._data = utils.mergeCopy(data,path,newValue)
+  }
+};/* */
+
+FirebaseProxy.prototype.on_value = function(path, value, priority){
+  var listeners = this._listeners;
+  var data = this._data;
+  value = utils.mergePriority(value, priority);
+  var currentPath = [];
+  path = path.slice();
+
+  this._data = mergeValues(currentPath, path, data, value, listeners);
+
+};/* */
+
+function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
+  var propName = remainingPath.shift();
+  currentPath.push(propName);
+  var propListeners = listeners && listeners[propName];
+  var oldProp = (oldValue && oldValue.hasOwnProperty(propName)) ? oldValue[propName] : null;
+  var newProp;
+  if(remainingPath.length){
+    newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners);
+  }
+  else {
+    newProp = callListeners(currentPath, newValue, oldProp, propListeners);
+  }
+  if(oldProp === newProp){
+    return oldValue;
+  }
+
+  var copy = {};
+  for(var i in oldValue){
+    if(oldValue.hasOwnProperty(i)){
+      copy[i] = oldValue[i];
+    }
+  }
+  if(newProp === null){
+    delete copy[propName];
+    for(var j in copy){
+      if(j !== '.priority'){
+        return copy;
+      }
+    }
+    return null;
+  }
+  else {
+    copy[propName] = newProp;
+    return copy;
+  }
+}
 
 function callListeners(path, value, oldValue, listeners){
   var changed = !(value === oldValue || ((typeof value === 'object') && (typeof oldValue === 'object')));
@@ -74,21 +125,23 @@ function callListeners(path, value, oldValue, listeners){
         keyCache[i] = true;
         path.push(i);
 
-        var childChanged = callListeners(
+        var oldProp = oldValue && oldValue.hasOwnProperty(i) ? oldValue[i] : null;
+        var newProp = value[i];
+        var childChanged = !(oldProp === callListeners(
           path,
-          value[i],
-          oldValue && oldValue.hasOwnProperty(i) ? oldValue[i] : null,
+          newProp,
+          oldProp,
           listeners && listeners[i]
-        );
+        ));
         changed = childChanged || changed;
 
 
         if(events){
           if( !(oldValue && oldValue.hasOwnProperty(i))) {
-            events.emit('child_added', new FakeSnapshot(path.join('/'), value[i]));
+            events.emit('child_added', new FakeSnapshot(path.join('/'), newProp));
           }
           else if(childChanged) {
-            events.emit('child_changed', new FakeSnapshot(path.join('/'), value[i]));
+            events.emit('child_changed', new FakeSnapshot(path.join('/'), newProp));
           }
         }
 
@@ -149,7 +202,7 @@ function callListeners(path, value, oldValue, listeners){
       events.emit('value',new FakeSnapshot(path.join('/'),value));
     }
   }
-  return changed;
+  return changed ? value : oldValue;
 }
 
 FirebaseProxy.prototype.handleCallback = function(){

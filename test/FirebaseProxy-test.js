@@ -221,6 +221,29 @@ describe('FirebaseProxy',function(){
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('b',null,'a'));
     });
 
+    it('will call child_changed listeners for child with changed priority',function(){
+      var path1 = 'https://mock/a/b'.split('/');
+
+      proxy.on(path1,'child_changed',spy1);
+      proxy.on_value(path1,{a:'a'}); //not called for the initial value
+      proxy.on_value(path1,{a:{'.value':'a','.priority':1}});
+      proxy.on_value(path1,null); //not called on removal
+
+      expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a',1,'a'));
+    });
+
+    xit('will call child_changed listeners on parents',function(){
+      var path1 = 'https://mock/a/b'.split('/');
+      var path2 = 'https://mock/a/b/c'.split('/');
+
+      proxy.on(path1,'child_changed',spy1);
+      proxy.on_value(path1,{c:'c'}); //not called for the initial value
+      proxy.on_value(path2,'d');
+      proxy.on_value(path1,null); //not called on removal
+
+      expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('d',null,'c'));
+    });
+
     it('will call child_removed listeners for removed children',function(){
       var path1 = 'https://mock/a/b'.split('/');
 
@@ -306,9 +329,9 @@ describe('FirebaseProxy',function(){
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(1));
         spy.reset();
         proxy.on_value(path,1);
-        expect(spy,'1').not.to.have.been.called;
+        expect(spy,'1a').not.to.have.been.called;
         proxy.on_value(path,1);
-        expect(spy,'1').not.to.have.been.called;
+        expect(spy,'1b').not.to.have.been.called;
       });
 
       it('(deeply equal objects)',function(){

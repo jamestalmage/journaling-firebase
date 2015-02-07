@@ -183,10 +183,23 @@ function mergeCopy(orginalData, path, value){
   return _mergeCopy(orginalData, path.slice(), value === undefined ? null : value);
 }
 
+function isEqualLeafValue(a,b){
+  return (a === b) ||
+  (
+  a && b &&
+  a.hasOwnProperty('.value') && b.hasOwnProperty('.value') &&
+  a.hasOwnProperty('.priority') && b.hasOwnProperty('.priority') &&
+  a['.value'] === b['.value'] &&
+  a['.priority'] === b['.priority']
+  );
+}
+
+exports.isEqualLeafValue = isEqualLeafValue;
+
 function _mergeCopy(originalData, path, value){
   if(path.length){
     var propName = path.shift();
-    var originalProp = (originalData && originalData[propName]) || null;
+    var originalProp = (originalData && originalData.hasOwnProperty(propName)) ? originalData[propName] :  null;
     var copyProp = _mergeCopy(originalProp, path, value);
     if(copyProp === originalProp) {
       return originalData;
@@ -212,7 +225,7 @@ function _mergeCopy(originalData, path, value){
     }
   }
   else {
-    return value;
+    return isEqualLeafValue(originalData,value) ? originalData : value;
   }
 }
 exports.mergeCopy = mergeCopy;
