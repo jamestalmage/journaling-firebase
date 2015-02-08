@@ -106,6 +106,11 @@ gulp.task('release', ['bundle', 'bump'], function () {
 gulp.task('lint', function(){
    return gulp.src(['src/*.js','test/*.js'])
      .pipe(plugins.jshint())
-     //.pipe(plugins.jshint.reporter());
-     .pipe(plugins.jshint.reporter('jshint-stylish',{verbose:true}));
+     .pipe(plugins.jshint.reporter('jshint-stylish',{verbose:true}))
+     .pipe(plugins.jshint.reporter('fail'));
+});
+
+gulp.task('coveralls',function(){
+  gulp.src('coverage/lcov.info')
+    .pipe(plugins.coveralls());
 });
