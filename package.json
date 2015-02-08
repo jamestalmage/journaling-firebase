@@ -42,7 +42,7 @@
     "karma-mocha-reporter": "^0.3.1",
     "karma-webpack": "^1.5.0",
     "mocha": "^2.1.0",
-    "mockfirebase": "git://github.com/jamestalmage/mockfirebase.git#priority-timestamps-release",
+    "mockfirebase": "^0.10.1",
     "rewire": "^2.1.4",
     "rewire-webpack": "^1.0.0",
     "semver": "^4.2.0",
