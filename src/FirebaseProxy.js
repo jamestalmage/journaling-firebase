@@ -52,9 +52,13 @@ FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback
   }
 
   var events = listeners['.events'];
+  var listener = listeners['.on_value'];
 
   if(events){
     events.off(eventType,callback);
+    if(!events.hasListeners()){
+      this._wrapper.off(path,'value',listener);
+    }
   }
 };
 
