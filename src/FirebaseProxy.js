@@ -17,21 +17,19 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
   var listeners = this._listeners;
   var data = this._data;
   var initialized = listeners['.initialized'];
+  var listening = listeners['.listening'];
 
   for(var i = 0, len = path.length; i < len; i++){
     var propName = path[i];
     listeners = listeners[propName] || (listeners[propName] = {});
     initialized = initialized || (listeners && listeners['.initialized']);
+    listening = listening || (listeners && listeners['.listening']);
     data = (data || null) && data[propName];
   }
 
-  if(!listeners['.on_value']){
-    path = path.slice();
-    var self = this;
-    var listener = listeners['.on_value'] = function(snap){
-      self.handleCallback(path.slice(), 'value', snap);
-    };
-    wrapper.on(path, 'value', listener);
+  if(!listening){
+    listeners['.listening'] = true;
+    wrapper.on(path.slice());
   }
   var events = listeners['.events'] || (listeners['.events'] = new EventEmitter());
   events.on(eventType,callback);
@@ -52,12 +50,11 @@ FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback
   }
 
   var events = listeners['.events'];
-  var listener = listeners['.on_value'];
 
   if(events){
     events.off(eventType,callback);
     if(!events.hasListeners()){
-      this._wrapper.off(path,'value',listener);
+      this._wrapper.off(path);
     }
   }
 };
