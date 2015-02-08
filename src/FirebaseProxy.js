@@ -41,6 +41,23 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
   }
 };
 
+FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback, context){
+  var listeners = this._listeners;
+
+  for(var i = 0, len = path.length; i < len; i++){
+    var propName = path[i];
+    if(!(listeners = listeners[propName])){
+      return;
+    }
+  }
+
+  var events = listeners['.events'];
+
+  if(events){
+    events.off(eventType,callback);
+  }
+};
+
 /*FirebaseProxy.prototype.on_value = function (path, value, priority){
   var listeners = this._listeners;
   var data = this._data;

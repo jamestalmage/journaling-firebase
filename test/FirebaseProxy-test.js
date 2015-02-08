@@ -158,6 +158,21 @@ describe('FirebaseProxy',function(){
     });
   });
 
+  describe('off(path, eventType, listener, [context]',function(){
+    it('deregisters listeners',function(){
+      var path = 'https://mock/a/b'.split('/');
+
+      proxy.on(path,'value',spy);
+      proxy.on_value(path,3);
+      expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(3));
+
+      spy.reset();
+      proxy.off(path,'value',spy);
+      proxy.on_value(path,4);
+      expect(spy).not.to.have.been.called;
+    });
+  });
+
   describe('on_value(path, value, [priority])',function(){
     it('will call registered value callbacks',function(){
       var path = 'https://mock/a/b'.split('/');
