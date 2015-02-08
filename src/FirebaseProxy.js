@@ -94,6 +94,8 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
         copy[i] = oldValue[i];
       }
     }
+    /* jshint -W028 */
+    // A labeled if statement. Yes it's a bit weird, but it works... and there are tests to prove it.
     loop: if(newProp === null){
       delete copy[propName];
       for(var j in copy){

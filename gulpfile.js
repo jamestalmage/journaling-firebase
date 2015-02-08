@@ -107,5 +107,5 @@ gulp.task('lint', function(){
    return gulp.src(['src/*.js','test/*.js'])
      .pipe(plugins.jshint())
      //.pipe(plugins.jshint.reporter());
-     .pipe(plugins.jshint.reporter('jshint-stylish'));
+     .pipe(plugins.jshint.reporter('jshint-stylish',{verbose:true}));
 });

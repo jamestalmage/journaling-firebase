@@ -1,11 +1,14 @@
+'use strict';
+
+var sinon = require('sinon');
+var match = sinon.match;
+var chai = require('chai');
+var expect = chai.expect;
+chai.use(require('sinon-chai'));
+
 describe('FirebaseProxy',function(){
 
   var FirebaseProxy = require('../src/FirebaseProxy');
-  var sinon = require('sinon');
-  var match = sinon.match;
-  var chai = require('chai');
-  var expect = chai.expect;
-  chai.use(require('sinon-chai'));
 
   var fbWrapper, proxy, spy, spy1, spy2, spy3, spy4;
 
@@ -414,6 +417,26 @@ describe('FirebaseProxy',function(){
         expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(null));
       });
     });
+  });
+
+});
+
+describe('labeled if statement behavior',function(){
+  /* jshint -W028 */
+
+  // JSHINT Complains that using a label on an if statement is bad form,
+  // but it plainly works (as proven by this test).
+  // Leaving this test active to prove it works on all target platforms.
+  it('works as expected',function(){
+    var x;
+    loop:if(true){
+      for(var i = 2; i < 10; i++){
+        x = i;
+        break loop;
+      }
+      x = 'did not break';
+    }
+    expect(x).to.equal(2);
   });
 
 });

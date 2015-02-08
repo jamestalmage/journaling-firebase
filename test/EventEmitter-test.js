@@ -1,3 +1,4 @@
+'use strict';
 
 var Emitter = require('../src/EventEmitter.js');
 var expect = require('chai').expect;
@@ -317,11 +318,11 @@ describe('Emitter', function(){
       var one = {ctx:1};
       var two = {ctx:2};
 
-      function cb() { calls.push('one', this); }
+      function CB() { calls.push('one', this); }
 
-      emitter.on('foo', cb, one);
-      emitter.on('foo', cb, two);
-      emitter.off('foo', cb, two);
+      emitter.on('foo', CB, one);
+      emitter.on('foo', CB, two);
+      emitter.off('foo', CB, two);
 
       emitter.emit('foo');
 
@@ -334,11 +335,11 @@ describe('Emitter', function(){
       var one = {ctx:1};
       var two = {ctx:2};
 
-      function cb() { calls.push('one', this); }
+      function CB() { calls.push('one', this); }
 
-      emitter.once('foo', cb, one);
-      emitter.once('foo', cb, two);
-      emitter.off('foo', cb, two);
+      emitter.once('foo', CB, one);
+      emitter.once('foo', CB, two);
+      emitter.off('foo', CB, two);
 
       emitter.emit('foo');
 
@@ -349,14 +350,14 @@ describe('Emitter', function(){
       var emitter = new Emitter();
       var ctxA = {};
       var ctxB = {};
-      function cb () {
+      function CB () {
         this.called = true;
       }
       emitter.on('tobi', function () {
-        emitter.off('tobi', cb, ctxA);
+        emitter.off('tobi', CB, ctxA);
       });
-      emitter.on('tobi', cb, ctxA);
-      emitter.on('tobi', cb, ctxB);
+      emitter.on('tobi', CB, ctxA);
+      emitter.on('tobi', CB, ctxB);
       emitter.emit('tobi');
       expect(ctxA.called).to.be.true;
       expect(ctxB.called).to.be.true;
@@ -473,7 +474,7 @@ describe('Emitter', function(){
 describe('Emitter(obj)', function(){
   it('should mixin', function(done){
     var proto = {};
-    Emitter(proto);
+    Emitter(proto); // jshint ignore:line
     proto.on('something', done);
     proto.emit('something');
   });

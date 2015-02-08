@@ -1,5 +1,6 @@
 {
   "mocha":true,
   "browserify":true,
-  "expr":true
+  "expr":true,
+  "predef":["xit"]
 }

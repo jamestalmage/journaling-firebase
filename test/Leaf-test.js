@@ -1,3 +1,5 @@
+'use strict';
+
 describe('Entry',function(){
 
   var chai = require('chai');

@@ -1,3 +1,5 @@
+'use strict';
+
 var Leaf = require('./Leaf');
 var utils = require('./utils');
 var FakeSnapshot = require('./FakeSnapshot');

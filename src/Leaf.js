@@ -1,3 +1,5 @@
+'use strict';
+
 var Firebase = require('firebase');
 var EventEmitter = require('./EventEmitter');
 
