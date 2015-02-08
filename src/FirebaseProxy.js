@@ -79,10 +79,11 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
   if(remainingPath.length){
 
     var propName = remainingPath.shift();
-    currentPath.push(propName);
     var propListeners = listeners && listeners[propName];
     var oldProp = (oldValue && oldValue.hasOwnProperty(propName)) ? oldValue[propName] : null;
+    currentPath.push(propName);
     newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners);
+    currentPath.pop();
     if(oldProp === newProp){
       return oldValue;
     }
@@ -93,20 +94,27 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
         copy[i] = oldValue[i];
       }
     }
-    if(newProp === null){
+    loop: if(newProp === null){
       delete copy[propName];
       for(var j in copy){
         if(j !== '.priority'){
-          return copy;
+          break loop;
         }
       }
-      return null;
+      copy = null;
     }
     else {
       copy[propName] = newProp;
-      return copy;
     }
-
+    var events = listeners && listeners['.events'];
+    if(events){
+      var pathString = currentPath.join('/');
+      var childSnap = new FakeSnapshot(pathString + '/' + propName, newProp === null ? oldProp : newProp);
+      var childEventType = newProp === null ? 'child_removed' : oldProp === null ? 'child_added' : 'child_changed';
+      events.emit(childEventType,childSnap);
+      events.emit('value', new FakeSnapshot(pathString,copy));
+    }
+    return copy;
   } else {
     newProp = callListeners(currentPath, newValue, oldValue, listeners);
     return utils.isEqualLeafValue(oldValue, newProp) ? oldValue : newProp;

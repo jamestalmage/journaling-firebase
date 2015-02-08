@@ -7,7 +7,7 @@ describe('FirebaseProxy',function(){
   var expect = chai.expect;
   chai.use(require('sinon-chai'));
 
-  var fbWrapper, proxy, spy, spy1, spy2;
+  var fbWrapper, proxy, spy, spy1, spy2, spy3, spy4;
 
   beforeEach(function(){
     fbWrapper = {
@@ -18,6 +18,8 @@ describe('FirebaseProxy',function(){
     spy = sinon.spy();
     spy1 = sinon.spy();
     spy2 = sinon.spy();
+    spy3 = sinon.spy();
+    spy4 = sinon.spy();
   });
 
   function snapVal(expectedVal,pri, key){
@@ -25,18 +27,23 @@ describe('FirebaseProxy',function(){
     var testPri = arguments.length > 1 && pri !== false;
     var testKey = arguments.length > 2;
     if(testPri){
-      message += ', and priority' + JSON.stringify(pri);
+      message += ', and priority ' + JSON.stringify(pri);
     }
     if(testKey){
-      message += ', and key' + JSON.stringify(key);
+      message += ', and key ' + JSON.stringify(key);
     }
     return sinon.match(function(snap){
-      expect(snap.val(), 'snap value').to.eql(expectedVal);
-      if(testPri){
-        expect(snap.getPriority(),'snap priority').to.equal(pri);
+      try {
+        expect(snap.val(), 'snap value').to.eql(expectedVal);
+        if(testPri){
+          expect(snap.getPriority(),'snap priority').to.equal(pri);
+        }
+        if(testKey){
+          expect(snap.key(),'snap key').to.equal(key);
+        }
       }
-      if(testKey){
-        expect(snap.key(),'snap key').to.equal(key);
+      catch(e){
+        return false;
       }
       return true;
     }, message);
@@ -232,16 +239,25 @@ describe('FirebaseProxy',function(){
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a',1,'a'));
     });
 
-    xit('will call child_changed listeners on parents',function(){
+    it('will call listeners on parents to the supplied path',function(){
       var path1 = 'https://mock/a/b'.split('/');
       var path2 = 'https://mock/a/b/c'.split('/');
 
-      proxy.on(path1,'child_changed',spy1);
-      proxy.on_value(path1,{c:'c'}); //not called for the initial value
+      proxy.on(path1,'child_added',spy1);
+      proxy.on(path1,'child_changed',spy2);
+      proxy.on(path1,'child_removed',spy3);
+      proxy.on(path1,'value',spy4);
+      proxy.on_value(path2,'c'); //not called for the initial value
       proxy.on_value(path2,'d');
-      proxy.on_value(path1,null); //not called on removal
+      proxy.on_value(path2,null); //not called on removal
 
-      expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('d',null,'c'));
+      expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('c',null,'c')); // child_added
+      expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal('d',null,'c')); // child_changed
+      expect(spy3).to.have.been.calledOnce.and.calledWith(snapVal('d',null,'c')); // child_removed - called with removed value
+      expect(spy4).to.have.been.calledThrice            //value
+        .and.calledWith(snapVal({c:'c'}, null, 'b'))
+        .and.calledWith(snapVal({c:'d'}, null, 'b'))
+        .and.calledWith(snapVal(null, null, 'b'));
     });
 
     it('will call child_removed listeners for removed children',function(){
