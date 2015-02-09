@@ -615,7 +615,7 @@ describe('FirebaseProxy',function(){
       expect(proxy._getData(path)).to.eql(null);
       expect(proxy._getData(path3)).to.eql({c:'c',d:'d'});
 
-      expect(proxy._getData('https://mock/a'.split('/'))).to.eql({e:{c:'c',d:'d'}})
+      expect(proxy._getData('https://mock/a'.split('/'))).to.eql({e:{c:'c',d:'d'}});
     });
   });
 
