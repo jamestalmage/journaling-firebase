@@ -29,7 +29,7 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
 
   if(!listening){
     listeners['.listening'] = true;
-    wrapper.on(path.slice());
+    wrapper.startWatching(path.slice());
   }
   var events = listeners['.events'] || (listeners['.events'] = new EventEmitter());
   events.on(eventType,callback);
@@ -54,7 +54,7 @@ FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback
   if(events){
     events.off(eventType,callback);
     if(!events.hasListeners()){
-      this._wrapper.off(path);
+      this._wrapper.stopWatching(path);
     }
   }
 };

@@ -14,8 +14,8 @@ describe('FirebaseProxy',function(){
 
   beforeEach(function(){
     fbWrapper = {
-      on:sinon.spy(),
-      off:sinon.spy()
+      startWatching:sinon.spy(),
+      stopWatching:sinon.spy()
     };
     proxy = new FirebaseProxy(fbWrapper);
     spy = sinon.spy();
@@ -60,36 +60,23 @@ describe('FirebaseProxy',function(){
 
 
   describe('on(path, "value", listener)',function(){
-    it('adds a value listener at the specified location',function(){
+    it('tells wrapper to startWatching at the specified location',function(){
       var path = 'a/b'.split('/');
       proxy.on(path,'value',spy);
 
-      expect(fbWrapper.on).to.have.been.calledOnce;
-      expect(fbWrapper.on.firstCall.args[0]).to.eql('a/b'.split('/'));
+      expect(fbWrapper.startWatching).to.have.been.calledOnce;
+      expect(fbWrapper.startWatching.firstCall.args[0]).to.eql('a/b'.split('/'));
       /*expect(fbWrapper.on.firstCall.args[1]).to.eql('value');
       var cb = fbWrapper.on.firstCall.args[2];
       expect(cb).to.be.a('function'); */
     });
 
-    it('does not add a second listener at the same location',function(){
+    it('does not startWatching the same location twice',function(){
       var path = 'a/b'.split('/');
       proxy.on(path,'value',spy1);
       proxy.on(path,'value',spy2);
 
-      expect(fbWrapper.on).to.have.been.calledOnce;
-    });
-
-    xit('callback submitted to wrapper will call `handleCallback` on proxy',function(){
-      proxy.handleCallback = sinon.spy();
-      var path = 'a/b'.split('/');
-      proxy.on(path,'value',spy);
-      var snap = {};
-
-      var cb = fbWrapper.on.firstCall.args[2];
-      expect(proxy.handleCallback).not.to.have.been.called;
-      cb(snap);
-      expect(proxy.handleCallback).to.have.been.calledOnce;
-      expect(proxy.handleCallback).to.have.been.calledWith('a/b'.split('/'),'value',match.same(snap));
+      expect(fbWrapper.startWatching).to.have.been.calledOnce;
     });
 
     it('listener will be called immediately if data is already cached',function(){
@@ -172,44 +159,41 @@ describe('FirebaseProxy',function(){
       expect(spy).not.to.have.been.called;
     });
 
-    it('will call off on the wrapper', function(){
+    it('will call stopWatching on the wrapper', function(){
       var path = 'https://mock/a/b'.split('/');
 
       proxy.on(path,'value',spy);
       //var cb = fbWrapper.on.firstCall.args[2];
 
-      expect(fbWrapper.off).not.to.have.been.called;
+      expect(fbWrapper.stopWatching).not.to.have.been.called;
       proxy.off(path,'value',spy);
-      expect(fbWrapper.off).to.have.been.calledOnce;
-      expect(fbWrapper.off.firstCall.args[0]).to.eql('https://mock/a/b'.split('/'));
+      expect(fbWrapper.stopWatching).to.have.been.calledOnce;
+      expect(fbWrapper.stopWatching.firstCall.args[0]).to.eql('https://mock/a/b'.split('/'));
       //expect(fbWrapper.off.firstCall.args[1]).to.equal('value');
       //expect(fbWrapper.off.firstCall.args[2]).to.equal(cb);
     });
 
-    it('will not call off on the until all listeners are removed', function(){
+    it('will not call stopWatching until all listeners are removed', function(){
       var path = 'https://mock/a/b'.split('/');
 
       proxy.on(path,'value',spy1);
       proxy.on(path,'value',spy2);
-      var cb = fbWrapper.on.firstCall.args[2];
 
-      expect(fbWrapper.off).not.to.have.been.called;
+      expect(fbWrapper.stopWatching).not.to.have.been.called;
       proxy.off(path,'value',spy1);
-      expect(fbWrapper.off).not.to.have.been.called;
+      expect(fbWrapper.stopWatching).not.to.have.been.called;
       proxy.off(path,'value',spy2);
-      expect(fbWrapper.off).to.have.been.calledOnce;
-      expect(fbWrapper.off.firstCall.args[0]).to.eql('https://mock/a/b'.split('/'));
-      //expect(fbWrapper.off.firstCall.args[1]).to.equal('value');
-      //expect(fbWrapper.off.firstCall.args[2]).to.equal(cb);
+      expect(fbWrapper.stopWatching).to.have.been.calledOnce;
+      expect(fbWrapper.stopWatching.firstCall.args[0]).to.eql('https://mock/a/b'.split('/'));
     });
 
-    it('will not call off if there were no listeners at that path in the first place', function(){
+    it('will not call stopWatching() if there were no listeners at that path in the first place', function(){
       var path1 = 'https://mock/a/b'.split('/');
       var path2 = 'https://mock/a/b/c'.split('/');
 
       proxy.on(path2,'value',spy1);
       proxy.off(path1,'value',spy1);
-      expect(fbWrapper.off).not.to.have.been.called;
+      expect(fbWrapper.stopWatching).not.to.have.been.called;
     });
   });
 
