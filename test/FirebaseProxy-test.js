@@ -195,6 +195,18 @@ describe('FirebaseProxy',function(){
       proxy.off(path1,'value',spy1);
       expect(fbWrapper.stopWatching).not.to.have.been.called;
     });
+
+    it('if it stops watching a location, it will start again as necessary',function(){
+      var path1 = 'https://mock/a/b'.split('/');
+      proxy.on(path1,'value',spy1);
+      proxy.on(path1,'value',spy2);
+      proxy.off(path1,'value',spy1);
+      proxy.off(path1,'value',spy2);
+      expect(fbWrapper.startWatching).to.have.been.calledOnce;
+      expect(fbWrapper.stopWatching).to.have.been.calledOnce;
+      proxy.on(path1,'value',spy);
+      expect(fbWrapper.startWatching).to.have.been.calledTwice;
+    });
   });
 
   describe('on_value(path, value, [priority])',function(){
