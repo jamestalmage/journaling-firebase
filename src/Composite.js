@@ -25,14 +25,18 @@ function Composite(compRef,storageRef){
   },this);
 }
 
+function validateEventType(eventType){
+  if(eventType !== 'value') throw new Error('only value events allowed on a journaling composite');
+  return eventType;
+}
 
 Composite.prototype.on = function(eventType){
-  if(eventType !== 'value') throw new Error('only value events allowed on a journaling composite');
+  validateEventType(eventType);
   this._events.on.apply(this._events,arguments);
 };
 
 Composite.prototype.once = function(eventType){
-  if(eventType !== 'value') throw new Error('only value events allowed on a journaling composite');
+  validateEventType(eventType);
   this._events.once.apply(this._events,arguments);
 };
 

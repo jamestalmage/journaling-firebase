@@ -83,11 +83,7 @@ Emitter.prototype.emit = function(eventType){
   var callbacks = this._callbacks[eventType];
 
   if (callbacks) {
-    callbacks = callbacks.slice(0);
-    for (var spec, i = 0, len = callbacks.length; i < len; ++i) {
-      spec = callbacks[i];
-      spec[0].apply(spec[1], args);
-    }
+    callAllSpecs(callbacks.slice(0), args, 0);
   }
 
   return this;
@@ -109,14 +105,17 @@ Emitter.prototype.cancel = function(eventType){
   for (var e in cbObj){
     /* istanbul ignore else  */
     if(cbObj.hasOwnProperty(e)){
-      var callbacks = cbObj[e];
-      for(var spec, i = 0, len = callbacks.length; i < len; i++){
-        spec = callbacks[i];
-        spec[2].apply(spec[1],args);
-      }
+      callAllSpecs(cbObj[e], args, 2);
     }
   }
 };
+
+function callAllSpecs(callbacks, args, specIndex){
+  for(var spec, i = 0, len = callbacks.length; i < len; i++){
+    spec = callbacks[i];
+    spec[specIndex].apply(spec[1],args);
+  }
+}
 
 Emitter.prototype.listeners = function(eventType){
   this._callbacks = this._callbacks || {};
