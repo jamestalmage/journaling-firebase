@@ -235,9 +235,4 @@ function callListeners(path, value, oldValue, listeners){
   return changed ? value : oldValue;
 }
 
-FirebaseProxy.prototype.handleCallback = function(){
-  throw new Error('handleCallback not implemented');
-};
-
-
 module.exports = FirebaseProxy;
