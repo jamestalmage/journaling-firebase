@@ -202,9 +202,11 @@ describe('FirebaseProxy',function(){
     it('will not call stopWatching() if there were no listeners at that path in the first place', function(){
       var path1 = 'https://mock/a/b'.split('/');
       var path2 = 'https://mock/a/b/c'.split('/');
+      var path3 = 'https://mock/a/b/c/d'.split('/');
 
       proxy.on(path2,'value',spy1);
-      proxy.off(path1,'value',spy1);
+      proxy.off(path1,'value',spy2);
+      proxy.off(path3,'value',spy3);
       expect(fbWrapper.stopWatching).not.to.have.been.called;
     });
 
@@ -246,13 +248,15 @@ describe('FirebaseProxy',function(){
     });
 
     it('stopWatching will be called with common parent path',function(){
-      var path1 = 'https://mock/a/b/c'.split('/');
-      var path2 = 'https://mock/a/b/d'.split('/');
+      var path1 = 'https://mock/a/b/c/e'.split('/');
+      var path2 = 'https://mock/a/b/d/f'.split('/');
       proxy.on(path1,'value',spy1);
       proxy.on(path2,'value',spy2);
+      proxy.on_value('https://mock/a/b/c'.split('/'),{e:'foo'});
+      proxy.on_value('https://mock/a/b/d'.split('/'),{f:'bar'});
       proxy.off(path1,'value',spy1);
       expect(fbWrapper.stopWatching).to.have.been.calledOnce;
-      expect(fbWrapper.stopWatching.firstCall.args[0]).to.equal('https://mock/a/b/c');
+      expect(fbWrapper.stopWatching.firstCall.args[0]).to.equal('https://mock/a/b/c/e');
       expect(fbWrapper.stopWatching.firstCall.args[1]).to.eql([]);
       expect(fbWrapper.stopWatching.firstCall.args[2]).to.equal('https://mock/a/b');
     });
@@ -372,6 +376,22 @@ describe('FirebaseProxy',function(){
       proxy.on_value(path1,null);
 
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('b',null,'a'));
+    });
+
+    it('removing a node will delete all empty parent nodes as well',function(){
+      var path1 = 'https://mock/a'.split('/');
+      var path2 = 'https://mock/a/b/c'.split('/');
+
+      var latestValue;
+      function setLatest(snap){
+        latestValue = snap.val();
+      }
+      proxy.on(path1,'value',setLatest);
+
+      proxy.on_value(path1,{d:'foo',b:{'.priority':3,c:'bar'}});
+      expect(latestValue).to.eql({d:'foo',b:{c:'bar'}});
+      proxy.on_value(path2,null);
+      expect(latestValue).to.eql({d:'foo'});
     });
 
     it('will call value listeners if priority changes but value does not',function(){

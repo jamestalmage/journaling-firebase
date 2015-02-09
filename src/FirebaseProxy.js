@@ -162,6 +162,7 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
 
     var copy = {};
     for(var i in oldValue){
+      /* istanbul ignore else */
       if(oldValue.hasOwnProperty(i)){
         copy[i] = oldValue[i];
       }
