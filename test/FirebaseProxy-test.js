@@ -617,6 +617,12 @@ describe('FirebaseProxy',function(){
 
       expect(proxy._getData('https://mock/a'.split('/'))).to.eql({e:{c:'c',d:'d'}});
     });
+
+    it('unwatched data will never be set',function(){
+      var path = 'https://mock/a/b'.split('/');
+      proxy.on_value(path,{c:'c',d:'d'},null,true);
+      expect(proxy._getData(path)).to.equal(null);
+    });
   });
 
 });

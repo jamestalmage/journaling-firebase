@@ -177,11 +177,13 @@ FirebaseProxy.prototype.on_value = function(path, value, priority, disablePrunin
   var currentPath = [];
   path = path.slice();
 
-  this._data = mergeValues(currentPath, path, data, value, listeners, disablePruning);
+  this._data = mergeValues(currentPath, path, data, value, listeners, disablePruning, false);
 
 };/* */
 
-function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, disablePruning){
+function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, disablePruning, listening){
+  if(!listeners && !listening) return oldValue;
+  listening = listening || (listeners && listeners['.events']);
   var newProp;
   if(remainingPath.length){
 
@@ -189,7 +191,7 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, 
     var propListeners = listeners && listeners[propName];
     var oldProp = (oldValue && oldValue.hasOwnProperty(propName)) ? oldValue[propName] : null;
     currentPath.push(propName);
-    newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners, disablePruning);
+    newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners, disablePruning, listening);
     currentPath.pop();
     if(oldProp === newProp){
       return oldValue;
