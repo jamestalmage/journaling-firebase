@@ -190,9 +190,11 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, 
     var propName = remainingPath.shift();
     var propListeners = listeners && listeners[propName];
     var oldProp = (oldValue && oldValue.hasOwnProperty(propName)) ? oldValue[propName] : null;
+
     currentPath.push(propName);
     newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners, disablePruning, listening);
     currentPath.pop();
+
     if(oldProp === newProp){
       return oldValue;
     }
@@ -248,10 +250,12 @@ function callListeners(path, value, oldValue, listeners){
     for( i in value){
       if (value.hasOwnProperty(i) && i.charAt(0) !== '.'){
         keyCache[i] = true;
-        path.push(i);
 
         var oldProp = oldValue && oldValue.hasOwnProperty(i) ? oldValue[i] : null;
         var newProp = value[i];
+
+        path.push(i);
+
         var childChanged = (oldProp !== callListeners(
           path,
           newProp,
@@ -286,6 +290,7 @@ function callListeners(path, value, oldValue, listeners){
       if (!keyCache[i] && oldValue.hasOwnProperty(i) && i.charAt(0) !== '.'){
         keyCache[i] = true;
         changed = true;
+
         path.push(i);
 
         callListeners(
