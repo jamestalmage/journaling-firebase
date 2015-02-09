@@ -91,6 +91,17 @@ describe('FirebaseProxy',function(){
       expect(fbWrapper.startWatching.thirdCall.args[1]).to.include('a/b/d');
     });
 
+    it('calls startWatching with path of common parent of nearest other watcher',function(){
+      var path1 = 'a/b/c'.split('/');
+      var path2 = 'a/d/e'.split('/');
+
+      proxy.on(path1,'value',spy1);
+      proxy.on(path2,'value',spy2);
+      expect(fbWrapper.startWatching).to.have.been.calledTwice
+        .and.calledWith('a/b/c',[],null)
+        .and.calledWith('a/d/e',[],'a');
+    });
+
     it('listener will be called immediately if data is already cached',function(){
       var path = 'https://mock/a/b'.split('/');
 

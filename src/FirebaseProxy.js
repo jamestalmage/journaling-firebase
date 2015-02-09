@@ -13,13 +13,17 @@ function FirebaseProxy(firebaseWrapper){
 
 
 FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback, context){
+  path = path.slice();
+  var pathStr = path.join('/');
   var wrapper = this._wrapper;
   var listeners = this._listeners;
+  var listenersStack = [];
   var data = this._data;
   var initialized = listeners['.initialized'];
   var listening = listeners['.events'];
 
   for(var i = 0, len = path.length; i < len; i++){
+    listenersStack.push(listeners);
     var propName = path[i];
     listeners = listeners[propName] || (listeners[propName] = {});
     initialized = initialized || (listeners && listeners['.initialized']);
@@ -32,17 +36,19 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
   if(!events){
     events = listeners['.events'] = new EventEmitter();
     if(!listening){
-      wrapper.startWatching(path.join('/'), findChildWatchers(path,listeners));
+      var childWatchers = findChildWatchers(path, listeners);
+      wrapper.startWatching(pathStr, childWatchers, findCommonParent(path,listenersStack,false));
     }
   }
   events.on(eventType,callback);
 
   if(initialized){
-    callback(new FakeSnapshot(path.join('/'),data));
+    callback(new FakeSnapshot(pathStr,data));
   }
 };
 
 FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback, context){
+  path = path.slice();
   var listeners = this._listeners;
   var listening = listeners['.events'];
   var listenersStack = [];
@@ -66,27 +72,30 @@ FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback
       if(listening === events){
         var unwatchPath = path.join('/');
         var childWatchPaths = findChildWatchers(path, listeners);
-        if(childWatchPaths.length){
-          this._wrapper.stopWatching(unwatchPath, childWatchPaths, null);
-          return;
-        }
-        while(path.length){
-          propName = path.pop();
-          listeners = listenersStack.pop();
-          delete listeners[propName];
-          if(!path.length || hasChildren(listeners)){
-            this._wrapper.stopWatching(unwatchPath, childWatchPaths, path.join('/'));
-            return;
-          }
-        }
+        var commonParents = findCommonParent(path,listenersStack,!childWatchPaths.length);
+        this._wrapper.stopWatching(unwatchPath, childWatchPaths, commonParents);
       }
     }
   }
 };
 
-function hasChildren(node){
+function findCommonParent(pathStack, listenersStack, deleting){
+  while(true){
+    var propName = pathStack.pop();
+    var listeners = listenersStack.pop();
+    if(deleting){
+      delete listeners[propName];
+      propName = null;
+    }
+    if(!pathStack.length || hasChildren(listeners,propName)){
+      return pathStack.join('/') || null;
+    }
+  }
+}
+
+function hasChildren(node,excluding){
   for(var i in node){
-    if(node.hasOwnProperty(i) && i.charAt(0) !== '.'){
+    if(node.hasOwnProperty(i) && i.charAt(0) !== '.' && (!excluding || excluding !== i)){
       return true;
     }
   }
