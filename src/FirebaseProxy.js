@@ -32,7 +32,7 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
   if(!events){
     events = listeners['.events'] = new EventEmitter();
     if(!listening){
-      wrapper.startWatching(path.join('/'));
+      wrapper.startWatching(path.join('/'), findChildWatchers(path,listeners));
     }
   }
   events.on(eventType,callback);
@@ -44,12 +44,17 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
 
 FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback, context){
   var listeners = this._listeners;
+  var listening = listeners['.events'];
+  var listenersStack = [];
+  var propName;
 
   for(var i = 0, len = path.length; i < len; i++){
-    var propName = path[i];
+    listenersStack.push(listeners);
+    propName = path[i];
     if(!(listeners = listeners[propName])){
       return;
     }
+    listening = listening || (listeners['.events']);
   }
 
   var events = listeners['.events'];
@@ -58,10 +63,55 @@ FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback
     events.off(eventType,callback);
     if(!events.hasListeners()){
       delete listeners['.events'];
-      this._wrapper.stopWatching(path.join('/'));
+      if(listening === events){
+        var unwatchPath = path.join('/');
+        var childWatchPaths = findChildWatchers(path, listeners);
+        if(childWatchPaths.length){
+          this._wrapper.stopWatching(unwatchPath, childWatchPaths, null);
+          return;
+        }
+        while(path.length){
+          propName = path.pop();
+          listeners = listenersStack.pop();
+          delete listeners[propName];
+          if(!path.length || hasChildren(listeners)){
+            this._wrapper.stopWatching(unwatchPath, childWatchPaths, path.join('/'));
+            return;
+          }
+        }
+      }
     }
   }
 };
+
+function hasChildren(node){
+  for(var i in node){
+    if(node.hasOwnProperty(i) && i.charAt(0) !== '.'){
+      return true;
+    }
+  }
+  return false;
+}
+
+function findChildWatchers(path, listeners){
+  var childPaths = [];
+  _findChildWatchers(path,listeners,childPaths,false);
+  return childPaths;
+}
+
+function _findChildWatchers(path, listeners, childPaths, include){
+  if(include && listeners['.events']){
+    childPaths.push(path.join('/'));
+    return;
+  }
+  for(var i in listeners){
+    if(listeners.hasOwnProperty(i) && i.charAt(0) !== '.'){
+      path.push(i);
+      _findChildWatchers(path, listeners[i], childPaths,true);
+      path.pop();
+    }
+  }
+}
 
 /*FirebaseProxy.prototype.on_value = function (path, value, priority){
   var listeners = this._listeners;

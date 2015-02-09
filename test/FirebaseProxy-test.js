@@ -66,9 +66,6 @@ describe('FirebaseProxy',function(){
 
       expect(fbWrapper.startWatching).to.have.been.calledOnce;
       expect(fbWrapper.startWatching.firstCall.args[0]).to.eql('a/b');
-      /*expect(fbWrapper.on.firstCall.args[1]).to.eql('value');
-      var cb = fbWrapper.on.firstCall.args[2];
-      expect(cb).to.be.a('function'); */
     });
 
     it('does not startWatching the same location twice',function(){
@@ -77,6 +74,21 @@ describe('FirebaseProxy',function(){
       proxy.on(path,'value',spy2);
 
       expect(fbWrapper.startWatching).to.have.been.calledOnce;
+    });
+
+    it('calls startWatching with child watch paths that should be to cancelled',function(){
+      var path = 'a/b'.split('/');
+      var path1 = 'a/b/c'.split('/');
+      var path2 = 'a/b/d'.split('/');
+
+      proxy.on(path1, 'value', spy1);
+      proxy.on(path2, 'value', spy2);
+      expect(fbWrapper.startWatching).to.have.been.calledTwice.and.calledWith('a/b/c').and.calledWith('a/b/d');
+      proxy.on(path, 'value', spy2);
+      expect(fbWrapper.startWatching).to.have.been.calledThrice;
+      expect(fbWrapper.startWatching.thirdCall.args[0]).to.equal('a/b');
+      expect(fbWrapper.startWatching.thirdCall.args[1]).to.include('a/b/c');
+      expect(fbWrapper.startWatching.thirdCall.args[1]).to.include('a/b/d');
     });
 
     it('listener will be called immediately if data is already cached',function(){
@@ -206,6 +218,43 @@ describe('FirebaseProxy',function(){
       expect(fbWrapper.stopWatching).to.have.been.calledOnce;
       proxy.on(path1,'value',spy);
       expect(fbWrapper.startWatching).to.have.been.calledTwice;
+    });
+
+    it('turning off all listeners at a child path will not call stop listening',function(){
+      var path1 = 'https://mock/a/b'.split('/');
+      var path2 = 'https://mock/a/b/c'.split('/');
+      proxy.on(path1,'value',spy1);
+      proxy.on(path2,'value',spy2);
+      proxy.off(path2,'value',spy2);
+      expect(fbWrapper.startWatching).to.have.been.calledOnce;
+      expect(fbWrapper.stopWatching).not.to.have.been.called;
+    });
+
+    it('stopWatching will be called with all child paths to start watching at',function(){
+      var path = 'https://mock/a/b'.split('/');
+      var path1 = 'https://mock/a/b/c'.split('/');
+      var path2 = 'https://mock/a/b/d'.split('/');
+      proxy.on(path,'value',spy);
+      proxy.on(path1,'value',spy2);
+      proxy.on(path2,'value',spy3);
+      proxy.off(path,'value',spy);
+      expect(fbWrapper.startWatching).to.have.been.calledOnce;
+      expect(fbWrapper.stopWatching).to.have.been.calledOnce;
+      expect(fbWrapper.stopWatching.firstCall.args[0]).to.equal('https://mock/a/b');
+      expect(fbWrapper.stopWatching.firstCall.args[1]).to.include('https://mock/a/b/c');
+      expect(fbWrapper.stopWatching.firstCall.args[1]).to.include('https://mock/a/b/d');
+    });
+
+    it('stopWatching will be called with common parent path',function(){
+      var path1 = 'https://mock/a/b/c'.split('/');
+      var path2 = 'https://mock/a/b/d'.split('/');
+      proxy.on(path1,'value',spy1);
+      proxy.on(path2,'value',spy2);
+      proxy.off(path1,'value',spy1);
+      expect(fbWrapper.stopWatching).to.have.been.calledOnce;
+      expect(fbWrapper.stopWatching.firstCall.args[0]).to.equal('https://mock/a/b/c');
+      expect(fbWrapper.stopWatching.firstCall.args[1]).to.eql([]);
+      expect(fbWrapper.stopWatching.firstCall.args[2]).to.equal('https://mock/a/b');
     });
   });
 
