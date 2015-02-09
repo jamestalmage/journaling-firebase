@@ -65,7 +65,7 @@ describe('FirebaseProxy',function(){
       proxy.on(path,'value',spy);
 
       expect(fbWrapper.startWatching).to.have.been.calledOnce;
-      expect(fbWrapper.startWatching.firstCall.args[0]).to.eql('a/b'.split('/'));
+      expect(fbWrapper.startWatching.firstCall.args[0]).to.eql('a/b');
       /*expect(fbWrapper.on.firstCall.args[1]).to.eql('value');
       var cb = fbWrapper.on.firstCall.args[2];
       expect(cb).to.be.a('function'); */
@@ -168,7 +168,7 @@ describe('FirebaseProxy',function(){
       expect(fbWrapper.stopWatching).not.to.have.been.called;
       proxy.off(path,'value',spy);
       expect(fbWrapper.stopWatching).to.have.been.calledOnce;
-      expect(fbWrapper.stopWatching.firstCall.args[0]).to.eql('https://mock/a/b'.split('/'));
+      expect(fbWrapper.stopWatching.firstCall.args[0]).to.eql('https://mock/a/b');
       //expect(fbWrapper.off.firstCall.args[1]).to.equal('value');
       //expect(fbWrapper.off.firstCall.args[2]).to.equal(cb);
     });
@@ -184,7 +184,7 @@ describe('FirebaseProxy',function(){
       expect(fbWrapper.stopWatching).not.to.have.been.called;
       proxy.off(path,'value',spy2);
       expect(fbWrapper.stopWatching).to.have.been.calledOnce;
-      expect(fbWrapper.stopWatching.firstCall.args[0]).to.eql('https://mock/a/b'.split('/'));
+      expect(fbWrapper.stopWatching.firstCall.args[0]).to.eql('https://mock/a/b');
     });
 
     it('will not call stopWatching() if there were no listeners at that path in the first place', function(){
