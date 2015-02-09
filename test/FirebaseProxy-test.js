@@ -550,6 +550,75 @@ describe('FirebaseProxy',function(){
     });
   });
 
+  describe('_getData(path)',function(){
+     it('will get the data from the specified path',function(){
+       var path1 = 'https://mock/a/b/c'.split('/');
+       proxy.on(path1,'value',spy);
+       proxy.on_value(path1,{a:'b'});
+       expect(proxy._getData(path1)).to.eql({a:'b'});
+     });
+
+     it('will return null if no data exists',function(){
+       var path1 = 'https://mock/a/b/c'.split('/');
+       var path2 = 'https://mock/a/b/d'.split('/');
+       proxy.on(path1,'value',spy);
+       proxy.on_value(path1,{a:'b'});
+       expect(proxy._getData(path2)).to.equal(null);
+     });
+  });
+
+  describe('pruning behavior',function(){
+    it('will prune unwatched data once listeners are removed',function(){
+      var path1 = 'https://mock/a/b/c'.split('/');
+      proxy.on(path1,'value',spy);
+      proxy.on_value(path1,{a:'b'});
+      proxy.off(path1,'value',spy);
+      expect(proxy._getData(path1)).to.equal(null);
+    });
+
+    it('pruning can be disabled for a given tree',function(){
+      var path = 'https://mock/a/b'.split('/');
+      var path1 = 'https://mock/a/b/c'.split('/');
+      var path2 = 'https://mock/a/b/d'.split('/');
+      proxy.on(path1,'value',spy1);
+      proxy.on(path2,'value',spy2);
+      proxy.on_value(path,{c:'c',d:'d'},null,true);
+      proxy.off(path1,'value',spy1);
+      expect(proxy._getData(path)).to.eql({c:'c',d:'d'});
+    });
+
+    it('nodes with disabled pruning will be deleted as a whole',function(){
+      var path = 'https://mock/a/b'.split('/');
+      var path1 = 'https://mock/a/b/c'.split('/');
+      var path2 = 'https://mock/a/b/d'.split('/');
+      proxy.on(path1,'value',spy1);
+      proxy.on(path2,'value',spy2);
+      proxy.on_value(path,{c:'c',d:'d'},null,true);
+      proxy.off(path1,'value',spy1);
+      proxy.off(path2,'value',spy2);
+      expect(proxy._getData(path)).to.eql(null);
+    });
+
+    it('pruning will not affect siblings',function(){
+      var path = 'https://mock/a/b'.split('/');
+      var path1 = 'https://mock/a/b/c'.split('/');
+      var path2 = 'https://mock/a/b/d'.split('/');
+      var path3 = 'https://mock/a/e'.split('/');
+      var path4 = 'https://mock/a/e/c'.split('/');
+      proxy.on(path1,'value',spy1);
+      proxy.on(path2,'value',spy2);
+      proxy.on(path4,'value',spy3);
+      proxy.on_value(path,{c:'c',d:'d'},null,true);
+      proxy.on_value(path3,{c:'c',d:'d'},null,true);
+      proxy.off(path1,'value',spy1);
+      proxy.off(path2,'value',spy2);
+      expect(proxy._getData(path)).to.eql(null);
+      expect(proxy._getData(path3)).to.eql({c:'c',d:'d'});
+
+      expect(proxy._getData('https://mock/a'.split('/'))).to.eql({e:{c:'c',d:'d'}})
+    });
+  });
+
 });
 
 describe('labeled if statement behavior',function(){

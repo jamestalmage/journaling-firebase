@@ -28,7 +28,7 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
     listeners = listeners[propName] || (listeners[propName] = {});
     initialized = initialized || (listeners && listeners['.initialized']);
     listening = listening || (listeners && listeners['.events']);
-    data = (data || null) && data[propName];
+    data = data && data.hasOwnProperty(propName) ? data[propName] : null;
   }
 
   var events = listeners['.events'];
@@ -37,7 +37,7 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
     events = listeners['.events'] = new EventEmitter();
     if(!listening){
       var childWatchers = findChildWatchers(path, listeners);
-      wrapper.startWatching(pathStr, childWatchers, findCommonParent(path,listenersStack,false));
+      wrapper.startWatching(pathStr, childWatchers, findCommonParent(path,listenersStack,false).join('/') || null);
     }
   }
   events.on(eventType,callback);
@@ -72,14 +72,40 @@ FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback
       if(listening === events){
         var unwatchPath = path.join('/');
         var childWatchPaths = findChildWatchers(path, listeners);
-        var commonParents = findCommonParent(path,listenersStack,!childWatchPaths.length);
-        this._wrapper.stopWatching(unwatchPath, childWatchPaths, commonParents);
+        var deleting = !childWatchPaths.length;
+        var commonParents = findCommonParent(path,listenersStack, deleting);
+        this._wrapper.stopWatching(unwatchPath, childWatchPaths, commonParents.join('/'));
+        if(deleting){
+          this._prune(commonParents, path[commonParents.length]);
+        }
       }
     }
   }
 };
 
+FirebaseProxy.prototype._prune = function(prunePath, pruneProp){
+  var listeners = this._listeners;
+  for(var i = 0, len = prunePath.length; i < len; i++){
+    listeners = listeners && listeners[prunePath[i]];
+    if(listeners && listeners['.disablePruning']){
+      return;
+    }
+  }
+  var data = this._getData(prunePath);
+  delete data[pruneProp];
+};
+
+FirebaseProxy.prototype._getData = function(path){
+  var data = this._data;
+  for (var i = 0, len = path.length; i < len; i++) {
+    var propName = path[i];
+    data = data && data.hasOwnProperty(propName) ? data[propName] : null;
+  }
+  return data;
+};
+
 function findCommonParent(pathStack, listenersStack, deleting){
+  pathStack = pathStack.slice();
   while(true){
     var propName = pathStack.pop();
     var listeners = listenersStack.pop();
@@ -88,7 +114,7 @@ function findCommonParent(pathStack, listenersStack, deleting){
       propName = null;
     }
     if(!pathStack.length || hasChildren(listeners,propName)){
-      return pathStack.join('/') || null;
+      return pathStack;//.join('/') || null;
     }
   }
 }
@@ -144,18 +170,18 @@ function _findChildWatchers(path, listeners, childPaths, include){
   }
 };/* */
 
-FirebaseProxy.prototype.on_value = function(path, value, priority){
+FirebaseProxy.prototype.on_value = function(path, value, priority, disablePruning){
   var listeners = this._listeners;
   var data = this._data;
   value = utils.mergePriority(value, priority);
   var currentPath = [];
   path = path.slice();
 
-  this._data = mergeValues(currentPath, path, data, value, listeners);
+  this._data = mergeValues(currentPath, path, data, value, listeners, disablePruning);
 
 };/* */
 
-function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
+function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, disablePruning){
   var newProp;
   if(remainingPath.length){
 
@@ -163,7 +189,7 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
     var propListeners = listeners && listeners[propName];
     var oldProp = (oldValue && oldValue.hasOwnProperty(propName)) ? oldValue[propName] : null;
     currentPath.push(propName);
-    newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners);
+    newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners, disablePruning);
     currentPath.pop();
     if(oldProp === newProp){
       return oldValue;
@@ -200,6 +226,9 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners){
     }
     return copy;
   } else {
+    if(listeners && disablePruning){
+      listeners['.disablePruning'] = true;
+    }
     newProp = callListeners(currentPath, newValue, oldValue, listeners);
     return utils.isEqualLeafValue(oldValue, newProp) ? oldValue : newProp;
   }
