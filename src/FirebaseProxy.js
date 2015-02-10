@@ -136,9 +136,7 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, 
     var events = listeners && listeners['.events'];
     if(events){
       var pathString = currentPath.join('/');
-      var childSnap = new FakeSnapshot(pathString + '/' + propName, newProp === null ? oldProp : newProp);
-      var childEventType = newProp === null ? 'child_removed' : oldProp === null ? 'child_added' : 'child_changed';
-      events.emit(childEventType,childSnap);
+      emitChildEvent(events, pathString + '/' + propName, newProp, oldProp);
       events.emit('value', new FakeSnapshot(pathString,copy));
     }
     return copy;
@@ -339,4 +337,17 @@ function _findChildWatchers(path, listenersNode, childPaths, include){
  */
 function hasOwnPublicProperty(obj, propName) {
   return obj.hasOwnProperty(propName) && propName.charAt(0) !== '.';
+}
+
+/**
+ * Will correctly create and call one of the child related events.
+ * @param {EventEmitter}events
+ * @param {String} path
+ * @param {*} newProp
+ * @param {*} oldProp
+ */
+function emitChildEvent(events, path, newProp, oldProp) {
+  var childSnap = new FakeSnapshot(path, newProp === null ? oldProp : newProp);
+  var childEventType = newProp === null ? 'child_removed' : oldProp === null ? 'child_added' : 'child_changed';
+  events.emit(childEventType, childSnap);
 }
