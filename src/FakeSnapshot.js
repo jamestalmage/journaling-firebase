@@ -2,29 +2,23 @@
 
 var utils = require('./utils');
 
-function FakeSnapshot(uri,val,pri){
-  uri = utils.parseUri(uri);
-  val = utils.cloneWithPriority(val,pri);
-  pri = utils.extractPriority(val);
-  this._export = val;
-  this._val = utils.valueCopy(val);
-  this._key = uri.key;
-  this._uri = uri.uri;
-  this._parent = uri.parent;
-  this._pri = pri;
+function makeConstructor(priMergeFn){
+  return function SnapshotConstructor(uri,val,pri){
+    uri = utils.parseUri(uri);
+    val = priMergeFn(val,pri);
+    pri = utils.extractPriority(val);
+    this._export = val;
+    this._val = utils.valueCopy(val);
+    this._key = uri.key;
+    this._uri = uri.uri;
+    this._parent = uri.parent;
+    this._pri = pri;
+  };
 }
 
-function UnsafeSnapshot(uri,val,pri){
-  uri = utils.parseUri(uri);
-  val = utils.mergePriority(val,pri);
-  pri = utils.extractPriority(val);
-  this._export = val;
-  this._val = utils.valueCopy(val);
-  this._key = uri.key;
-  this._uri = uri.uri;
-  this._parent = uri.parent;
-  this._pri = pri;
-}
+var FakeSnapshot = makeConstructor(utils.cloneWithPriority);
+var UnsafeSnapshot = makeConstructor(utils.mergePriority);
+FakeSnapshot.Unsafe = UnsafeSnapshot;
 
 function ChildSnapshot(uri,expVal,val){
   uri = utils.parseUri(uri);

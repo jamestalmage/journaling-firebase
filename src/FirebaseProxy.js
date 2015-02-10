@@ -28,7 +28,7 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
     listeners = listeners[propName] || (listeners[propName] = {});
     initialized = initialized || (listeners && listeners['.initialized']);
     listening = listening || (listeners && listeners['.events']);
-    data = getProperty(data,propName);
+    data = safelyGetProperty(data,propName);
   }
 
   var events = listeners['.events'];
@@ -98,7 +98,7 @@ FirebaseProxy.prototype._prune = function(prunePath, pruneProp){
 FirebaseProxy.prototype._getData = function(path){
   var data = this._data;
   for (var i = 0, len = path.length; i < len; i++) {
-    data = getProperty(data,path[i]);
+    data = safelyGetProperty(data,path[i]);
   }
   return data;
 };
@@ -121,7 +121,7 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, 
 
     var propName = remainingPath.shift();
     var propListeners = listeners && listeners[propName];
-    var oldProp = getProperty(oldValue,propName);
+    var oldProp = safelyGetProperty(oldValue,propName);
 
     currentPath.push(propName);
     newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners, disablePruning, listening);
@@ -131,7 +131,7 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, 
       return oldValue;
     }
 
-    var copy = mergeProperty(shallowCopy(oldValue),propName,newProp);
+    var copy = utils.mergeProperty(utils.shallowCopy(oldValue),propName,newProp);
 
     var events = listeners && listeners['.events'];
     if(events){
@@ -161,10 +161,10 @@ function callListeners(path, value, oldValue, listeners){
 
   if(typeof value === 'object' && value !== null){
     for( i in value){
-      if (value.hasOwnProperty(i) && i.charAt(0) !== '.'){
+      if (hasOwnPublicProperty(value,i)){
         keyCache[i] = true;
 
-        var oldProp = getProperty(oldValue,i);
+        var oldProp = safelyGetProperty(oldValue,i);
         var newProp = value[i];
 
         path.push(i);
@@ -200,7 +200,7 @@ function callListeners(path, value, oldValue, listeners){
 
   if(typeof oldValue === 'object' && oldValue !== null){
     for(i in oldValue){
-      if (!keyCache[i] && oldValue.hasOwnProperty(i) && i.charAt(0) !== '.'){
+      if (!keyCache[i] && hasOwnPublicProperty(oldValue,i)){
         keyCache[i] = true;
         changed = true;
 
@@ -227,7 +227,7 @@ function callListeners(path, value, oldValue, listeners){
 
   if(listeners){
     for( i in listeners){
-      if(!keyCache[i] && listeners.hasOwnProperty(i) && i.charAt(0) !== '.'){
+      if(!keyCache[i] && hasOwnPublicProperty(listeners,i)){
         path.push(i);
 
         callListeners(path,null,null,listeners[i]);
@@ -251,56 +251,14 @@ function callListeners(path, value, oldValue, listeners){
 module.exports = FirebaseProxy;
 
 /**
- * Creates a shallow copy of an object.
- * @param {Object} obj
- * @returns {Object}
- */
-function shallowCopy(obj){
-  var copy = {};
-  for(var i in obj){
-    /* istanbul ignore else */
-    if(obj.hasOwnProperty(i)){
-      copy[i] = obj[i];
-    }
-  }
-  return copy;
-}
-
-/**
- * If propValue is non-null, sets obj[propName] = propValue, and returns obj.
- *
- * If propValue is null, deletes obj[propName]. Returns obj, or null if obj has no further properties.
- *
- * @param {Object} obj
- * @param {String} propName
- * @param propValue
- * @returns {Object, null}
- */
-function mergeProperty(obj, propName, propValue){
-  if(propValue === null){
-    delete obj[propName];
-    for(var j in obj){
-      if(j !== '.priority'){
-        return obj;
-      }
-    }
-    return null;
-  }
-  else {
-    obj[propName] = propValue;
-    return obj;
-  }
-}
-
-
-/**
- * Gets the property with the given name from an object or primitive.
- * If objOrPrimitive is null or a primitive will return null.
- * @param objOrPrimitive
+ * Safely gets the property with the given name from an object or primitive.
+ * Return null if objOrPrimitive is null, a primitive, or does not have the specified property,
+ * otherwise return the property value.
+ * @param {Object,null,string,number,boolean} objOrPrimitive
  * @param propName
  * @returns {Object, null}
  */
-function getProperty(objOrPrimitive,propName){
+function safelyGetProperty(objOrPrimitive,propName){
   return (objOrPrimitive && objOrPrimitive.hasOwnProperty(propName)) ? objOrPrimitive[propName] : null;
 }
 
@@ -313,7 +271,7 @@ function getProperty(objOrPrimitive,propName){
  */
 function hasChildren(node,otherThan){
   for(var i in node){
-    if(node.hasOwnProperty(i) && i.charAt(0) !== '.' && otherThan !== i){
+    if(hasOwnPublicProperty(node,i) && otherThan !== i){
       return true;
     }
   }
@@ -365,10 +323,20 @@ function _findChildWatchers(path, listenersNode, childPaths, include){
     return;
   }
   for(var i in listenersNode){
-    if(listenersNode.hasOwnProperty(i) && i.charAt(0) !== '.'){
+    if(hasOwnPublicProperty(listenersNode, i)){
       path.push(i);
       _findChildWatchers(path, listenersNode[i], childPaths, true);
       path.pop();
     }
   }
+}
+
+/**
+ * Similar to obj.hasOwnProperty, but also checks to make sure the propName doesn't start with '.'
+ * @param obj
+ * @param propName
+ * @returns {*|boolean}
+ */
+function hasOwnPublicProperty(obj, propName) {
+  return obj.hasOwnProperty(propName) && propName.charAt(0) !== '.';
 }

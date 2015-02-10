@@ -206,28 +206,55 @@ function _mergeCopy(originalData, path, value){
     if(copyProp === originalProp) {
       return originalData;
     }
-    var copy = {};
-    for(var i in originalData){
-      if(originalData.hasOwnProperty(i)){
-        copy[i] = originalData[i];
-      }
-    }
-    if(copyProp === null){
-      delete copy[propName];
-      for(var j in copy){
-        if(j !== '.priority'){
-          return copy;
-        }
-      }
-      return null;
-    }
-    else {
-      copy[propName] = copyProp;
-      return copy;
-    }
+    return mergeProperty(shallowCopy(originalData),propName,copyProp);
   }
   else {
     return isEqualLeafValue(originalData,value) ? originalData : value;
   }
 }
 exports.mergeCopy = mergeCopy;
+
+/**
+ * If propValue is non-null, sets obj[propName] = propValue, and returns obj.
+ *
+ * If propValue is null, deletes obj[propName]. Returns obj, or null if obj has no further properties.
+ *
+ * @param {Object} obj
+ * @param {String} propName
+ * @param propValue
+ * @returns {Object, null}
+ */
+function mergeProperty(obj, propName, propValue){
+  if(propValue === null){
+    delete obj[propName];
+    for(var j in obj){
+      if(j !== '.priority'){
+        return obj;
+      }
+    }
+    return null;
+  }
+  else {
+    obj[propName] = propValue;
+    return obj;
+  }
+}
+exports.mergeProperty = mergeProperty;
+
+
+/**
+ * Creates a shallow copy of an object.
+ * @param {Object} obj
+ * @returns {Object}
+ */
+function shallowCopy(obj){
+  var copy = {};
+  for(var i in obj){
+    /* istanbul ignore else */
+    if(obj.hasOwnProperty(i)){
+      copy[i] = obj[i];
+    }
+  }
+  return copy;
+}
+exports.shallowCopy = shallowCopy;
