@@ -153,78 +153,14 @@ function callListeners(path, value, oldValue, listeners){
   var changed = !(value === oldValue || ((typeof value === 'object') && (typeof oldValue === 'object')));
 
   var keyCache = {};
-  var i;
 
   var events = listeners && listeners['.events'];
 
-  if(typeof value === 'object' && value !== null){
-    for( i in value){
-      if (hasOwnPublicProperty(value,i)){
-        keyCache[i] = true;
-
-        var oldProp = safelyGetProperty(oldValue,i);
-        var newProp = value[i];
-
-        path.push(i);
-
-        var childChanged = (oldProp !== callListeners(
-          path,
-          newProp,
-          oldProp,
-          listeners && listeners[i]
-        ));
-        changed = childChanged || changed;
-
-
-        if(events){
-          if( !(oldValue && oldValue.hasOwnProperty(i))) {
-            events.emit('child_added', new FakeSnapshot(path.join('/'), newProp));
-          }
-          else if(childChanged) {
-            events.emit('child_changed', new FakeSnapshot(path.join('/'), newProp));
-          }
-        }
-
-        path.pop();
-      }
-    }
-    if(!changed && value.hasOwnProperty('.priority')){
-      changed = !(oldValue && (value['.priority'] === oldValue['.priority']));
-    }
-    if(!changed && value.hasOwnProperty('.value')){
-      changed = !(oldValue && (value['.value'] === oldValue['.value']));
-    }
-  }
-
-  if(typeof oldValue === 'object' && oldValue !== null){
-    for(i in oldValue){
-      if (!keyCache[i] && hasOwnPublicProperty(oldValue,i)){
-        keyCache[i] = true;
-        changed = true;
-
-        path.push(i);
-
-        callListeners(
-          path,
-          null, // we know the new value does not have this property
-          oldValue[i],
-          listeners && listeners[i]
-        );
-
-        if(events){
-          events.emit('child_removed', new FakeSnapshot(path.join('/'), oldValue[i]));
-        }
-
-        path.pop();
-      }
-    }
-    if(!changed && oldValue.hasOwnProperty('.priority')){
-      changed = !(value && (value['.priority'] === oldValue['.priority']));
-    }
-  }
+  changed = iterateNewAndChanged(value, oldValue, path, listeners, keyCache, changed);
+  changed = iterateRemoved(value, oldValue, path, listeners, keyCache, changed);
 
   if(listeners){
-    for( i in listeners){
+    for(var i in listeners){
       if(!keyCache[i] && hasOwnPublicProperty(listeners,i)){
         path.push(i);
 
@@ -244,6 +180,77 @@ function callListeners(path, value, oldValue, listeners){
     }
   }
   return changed ? value : oldValue;
+}
+
+function iterateNewAndChanged(value, oldValue, path, listeners, keyCache, changed) {
+  var events = listeners && listeners['.events'];
+  if (typeof value === 'object' && value !== null) {
+    for (var i in value) {
+      if (hasOwnPublicProperty(value, i)) {
+        keyCache[i] = true;
+
+        var oldProp = safelyGetProperty(oldValue, i);
+        var newProp = value[i];
+
+        path.push(i);
+
+        var childChanged = (oldProp !== callListeners(
+          path,
+          newProp,
+          oldProp,
+          listeners && listeners[i]
+        ));
+        changed = childChanged || changed;
+
+
+        if (events && childChanged) {
+          var snap = new FakeSnapshot(path.join('/'),newProp);
+          var eventType = oldValue && oldValue.hasOwnProperty(i) ? 'child_changed' : 'child_added';
+          events.emit(eventType,snap);
+        }
+
+        path.pop();
+      }
+    }
+    if (!changed && value.hasOwnProperty('.priority')) {
+      changed = !(oldValue && (value['.priority'] === oldValue['.priority']));
+    }
+    if (!changed && value.hasOwnProperty('.value')) {
+      changed = !(oldValue && (value['.value'] === oldValue['.value']));
+    }
+  }
+  return changed;
+}
+
+function iterateRemoved(value, oldValue, path, listeners, keyCache, changed) {
+  var events = listeners && listeners['.events'];
+  if (typeof oldValue === 'object' && oldValue !== null) {
+    for (var i in oldValue) {
+      if (!keyCache[i] && hasOwnPublicProperty(oldValue, i)) {
+        keyCache[i] = true;
+        changed = true;
+
+        path.push(i);
+
+        callListeners(
+          path,
+          null, // we know the new value does not have this property
+          oldValue[i],
+          listeners && listeners[i]
+        );
+
+        if (events) {
+          events.emit('child_removed', new FakeSnapshot(path.join('/'), oldValue[i]));
+        }
+
+        path.pop();
+      }
+    }
+    if (!changed && oldValue.hasOwnProperty('.priority')) {
+      changed = !(value && (value['.priority'] === oldValue['.priority']));
+    }
+  }
+  return changed;
 }
 
 module.exports = FirebaseProxy;
@@ -340,7 +347,8 @@ function hasOwnPublicProperty(obj, propName) {
 }
 
 /**
- * Will correctly create and call one of the child related events.
+ * Will correctly create a snapshot for, and call one of the child related events.
+ * TODO: does not handle child_moved
  * @param {EventEmitter}events
  * @param {String} path
  * @param {*} newProp
