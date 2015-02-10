@@ -14,29 +14,55 @@ function FakeSnapshot(uri,val,pri){
   this._pri = pri;
 }
 
+function UnsafeSnapshot(uri,val,pri){
+  uri = utils.parseUri(uri);
+  val = utils.mergePriority(val,pri);
+  pri = utils.extractPriority(val);
+  this._export = val;
+  this._val = utils.valueCopy(val);
+  this._key = uri.key;
+  this._uri = uri.uri;
+  this._parent = uri.parent;
+  this._pri = pri;
+}
+
+function ChildSnapshot(uri,expVal,val){
+  uri = utils.parseUri(uri);
+  this._export = expVal;
+  this._val = val;
+  this._key = uri.key;
+  this._uri = uri.uri;
+  this._parent = uri.parent;
+  this._pri = utils.extractPriority(expVal);
+}
+
+UnsafeSnapshot.prototype = ChildSnapshot.prototype = FakeSnapshot.prototype;
+
 FakeSnapshot.prototype.exists = function(){
-  return this.val() !== null;
+  return this._val !== null;
 };
 
 FakeSnapshot.prototype.val = function(){
   return utils.clone(this._val);
 };
 
-FakeSnapshot.prototype._childVal = function(path){
+FakeSnapshot.prototype.child = function(path){
   utils.validatePath(path);
   var pathArray = path.split('/');
-  var val = this._export;
+  var val = this._val;
+  var exp = this._export;
   var len = pathArray.length;
   var i = 0;
   while(val && i < len){
-    val = val[pathArray[i]];
+    var propName = pathArray[i];
+    val = val[propName];
+    exp = exp[propName];
     i++;
   }
-  return i < len ? null : (val === undefined ? null : val);
-};
-
-FakeSnapshot.prototype.child = function(path){
-  return new FakeSnapshot(this._uri + '/' + path, this._childVal(path));
+  if(i < len || val === undefined){
+    return new ChildSnapshot(this._uri + '/' + path, null, null);
+  }
+  return new ChildSnapshot(this._uri + '/' + path, exp, val);
 };
 
 FakeSnapshot.prototype.forEach = function(cb){
@@ -57,7 +83,7 @@ FakeSnapshot.prototype.forEach = function(cb){
 };
 
 FakeSnapshot.prototype.hasChild = function(path){
-  return this._childVal(path) !== null;
+  return this.child(path).exists();
 };
 
 FakeSnapshot.prototype.hasChildren = function(){
