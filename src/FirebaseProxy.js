@@ -28,7 +28,7 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
     listeners = listeners[propName] || (listeners[propName] = {});
     initialized = initialized || (listeners && listeners['.initialized']);
     listening = listening || (listeners && listeners['.events']);
-    data = data && data.hasOwnProperty(propName) ? data[propName] : null;
+    data = getProperty(data,propName);
   }
 
   var events = listeners['.events'];
@@ -98,77 +98,10 @@ FirebaseProxy.prototype._prune = function(prunePath, pruneProp){
 FirebaseProxy.prototype._getData = function(path){
   var data = this._data;
   for (var i = 0, len = path.length; i < len; i++) {
-    var propName = path[i];
-    data = data && data.hasOwnProperty(propName) ? data[propName] : null;
+    data = getProperty(data,path[i]);
   }
   return data;
 };
-
-function findCommonParent(pathStack, listenersStack, deleting){
-  pathStack = pathStack.slice();
-  while(true){
-    var propName = pathStack.pop();
-    var listeners = listenersStack.pop();
-    if(deleting){
-      delete listeners[propName];
-      propName = null;
-    }
-    if(!pathStack.length || hasChildren(listeners,propName)){
-      return pathStack;//.join('/') || null;
-    }
-  }
-}
-
-function hasChildren(node,excluding){
-  for(var i in node){
-    if(node.hasOwnProperty(i) && i.charAt(0) !== '.' && (!excluding || excluding !== i)){
-      return true;
-    }
-  }
-  return false;
-}
-
-function findChildWatchers(path, listeners){
-  var childPaths = [];
-  _findChildWatchers(path,listeners,childPaths,false);
-  return childPaths;
-}
-
-function _findChildWatchers(path, listeners, childPaths, include){
-  if(include && listeners['.events']){
-    childPaths.push(path.join('/'));
-    return;
-  }
-  for(var i in listeners){
-    if(listeners.hasOwnProperty(i) && i.charAt(0) !== '.'){
-      path.push(i);
-      _findChildWatchers(path, listeners[i], childPaths,true);
-      path.pop();
-    }
-  }
-}
-
-/*FirebaseProxy.prototype.on_value = function (path, value, priority){
-  var listeners = this._listeners;
-  var data = this._data;
-
-  value = utils.mergePriority(value, priority);
-
-  var propName;
-  for(var i = 0, len = path.length -1; i <= len; i++){
-    propName = path[i];
-    listeners = listeners && listeners[propName];
-    if(i !== len){
-      data = data[propName] || (data[propName] =  {});
-    }
-  }
-  var oldValue = data[propName];
-  // data[propName] = value;
-  var newValue = callListeners(path, value, oldValue, listeners);
-  if(newValue !== oldValue){
-    this._data = utils.mergeCopy(data,path,newValue)
-  }
-};/* */
 
 FirebaseProxy.prototype.on_value = function(path, value, priority, disablePruning){
   var listeners = this._listeners;
@@ -178,8 +111,7 @@ FirebaseProxy.prototype.on_value = function(path, value, priority, disablePrunin
   path = path.slice();
 
   this._data = mergeValues(currentPath, path, data, value, listeners, disablePruning, false);
-
-};/* */
+};
 
 function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, disablePruning, listening){
   if(!listeners && !listening) return oldValue;
@@ -189,7 +121,7 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, 
 
     var propName = remainingPath.shift();
     var propListeners = listeners && listeners[propName];
-    var oldProp = (oldValue && oldValue.hasOwnProperty(propName)) ? oldValue[propName] : null;
+    var oldProp = getProperty(oldValue,propName);
 
     currentPath.push(propName);
     newProp = mergeValues(currentPath, remainingPath, oldProp, newValue, propListeners, disablePruning, listening);
@@ -199,27 +131,8 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, 
       return oldValue;
     }
 
-    var copy = {};
-    for(var i in oldValue){
-      /* istanbul ignore else */
-      if(oldValue.hasOwnProperty(i)){
-        copy[i] = oldValue[i];
-      }
-    }
-    /* jshint -W028 */
-    // A labeled if statement. Yes it's a bit weird, but it works... and there are tests to prove it.
-    loop: if(newProp === null){
-      delete copy[propName];
-      for(var j in copy){
-        if(j !== '.priority'){
-          break loop;
-        }
-      }
-      copy = null;
-    }
-    else {
-      copy[propName] = newProp;
-    }
+    var copy = mergeProperty(shallowCopy(oldValue),propName,newProp);
+
     var events = listeners && listeners['.events'];
     if(events){
       var pathString = currentPath.join('/');
@@ -251,7 +164,7 @@ function callListeners(path, value, oldValue, listeners){
       if (value.hasOwnProperty(i) && i.charAt(0) !== '.'){
         keyCache[i] = true;
 
-        var oldProp = oldValue && oldValue.hasOwnProperty(i) ? oldValue[i] : null;
+        var oldProp = getProperty(oldValue,i);
         var newProp = value[i];
 
         path.push(i);
@@ -336,3 +249,126 @@ function callListeners(path, value, oldValue, listeners){
 }
 
 module.exports = FirebaseProxy;
+
+/**
+ * Creates a shallow copy of an object.
+ * @param {Object} obj
+ * @returns {Object}
+ */
+function shallowCopy(obj){
+  var copy = {};
+  for(var i in obj){
+    /* istanbul ignore else */
+    if(obj.hasOwnProperty(i)){
+      copy[i] = obj[i];
+    }
+  }
+  return copy;
+}
+
+/**
+ * If propValue is non-null, sets obj[propName] = propValue, and returns obj.
+ *
+ * If propValue is null, deletes obj[propName]. Returns obj, or null if obj has no further properties.
+ *
+ * @param {Object} obj
+ * @param {String} propName
+ * @param propValue
+ * @returns {Object, null}
+ */
+function mergeProperty(obj, propName, propValue){
+  if(propValue === null){
+    delete obj[propName];
+    for(var j in obj){
+      if(j !== '.priority'){
+        return obj;
+      }
+    }
+    return null;
+  }
+  else {
+    obj[propName] = propValue;
+    return obj;
+  }
+}
+
+
+/**
+ * Gets the property with the given name from an object or primitive.
+ * If objOrPrimitive is null or a primitive will return null.
+ * @param objOrPrimitive
+ * @param propName
+ * @returns {Object, null}
+ */
+function getProperty(objOrPrimitive,propName){
+  return (objOrPrimitive && objOrPrimitive.hasOwnProperty(propName)) ? objOrPrimitive[propName] : null;
+}
+
+/**
+ * Checks to see if node has any children (i.e. properties). It excludes properties that start with '.',
+ * as well as an optional single excluded name `otherThan`
+ * @param {Object} node possibly containing children.
+ * @param {String} [otherThan] property name to exclude from the check.
+ * @returns {boolean} true if node contains any children other than the excluded property name.
+ */
+function hasChildren(node,otherThan){
+  for(var i in node){
+    if(node.hasOwnProperty(i) && i.charAt(0) !== '.' && otherThan !== i){
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ *
+ * @param {String[]} pathStack A string array containing the path. Should match the listenersStack.
+ * @param {Object[]} listenersStack A stack of listener nodes, built by pushing each listener node as
+ * you iterate down the path. Should match the listenersStack.
+ * @param {boolean} deleting if truthy, the stack represent an empty branch that should be deleted until a branching
+ * ancestor is found.
+ * @returns {Array|*|Array.<T>|string|Blob}
+ */
+function findCommonParent(pathStack, listenersStack, deleting){
+  pathStack = pathStack.slice();
+  while(true){
+    var propName = pathStack.pop();
+    var listeners = listenersStack.pop();
+    if(deleting){
+      delete listeners[propName];
+      propName = null;
+    }
+    if(!pathStack.length || hasChildren(listeners,propName)){
+      return pathStack;
+    }
+  }
+}
+
+/**
+ * Generates an array with child paths that contain listeners. It is not a comprehensive list
+ * The once listeners are found on a given branch, the algorithm does not search any deeper.
+ * (i.e. the return value would not contain both 'a/b' and 'a/b/c', since it would stop looking at 'b').
+ *
+ * @param {String[]} path An array of strings representation the path (i.e. pathString.split('/')).
+ * @param {Object} listenersNode
+ * @returns {String[]} An array
+ */
+function findChildWatchers(path, listenersNode){
+  var childPaths = [];
+  _findChildWatchers(path,listenersNode,childPaths,false);
+  return childPaths;
+}
+
+function _findChildWatchers(path, listenersNode, childPaths, include){
+  if(include && listenersNode['.events']){
+    childPaths.push(path.join('/'));
+    return;
+  }
+  for(var i in listenersNode){
+    if(listenersNode.hasOwnProperty(i) && i.charAt(0) !== '.'){
+      path.push(i);
+      _findChildWatchers(path, listenersNode[i], childPaths, true);
+      path.pop();
+    }
+  }
+}
