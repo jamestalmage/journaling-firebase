@@ -81,7 +81,7 @@ function makeRef(store){
    *                   servers has completed. The callback will be passed an Error object on failure; else null.
    */
   Firebase.prototype.set = function(value,onComplete){
-    store.setData(this._uri,new FakeSnapshot(this._uri,value));
+    this.setWithPriority(value,null,onComplete);
   };
 
   /**
@@ -99,7 +99,9 @@ function makeRef(store){
    * @param {Function} [onComplete] A callback function that will be called when synchronization to the Firebase
    *                   servers has completed. The callback will be passed an Error object on failure; else null.
    */
-  Firebase.prototype.remove = function(onComplete){};
+  Firebase.prototype.remove = function(onComplete){
+    this.set(null,onComplete);
+  };
 
   /**
    * Generates a new child location using a unique key and returns a Firebase reference to it.
