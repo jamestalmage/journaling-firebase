@@ -24,7 +24,9 @@ describe('URI',function(){
     });
 
     it('accepts another URI',function(){
-      expect(new URI(new URI('https://something.com/test')).toString()).to.equal('https://something.com/test');
+      var original = new URI('https://something.com/test');
+      var copy = new URI(original);
+      expect(original).to.equal(copy);
     });
 
     it('throws on bad input',function(){

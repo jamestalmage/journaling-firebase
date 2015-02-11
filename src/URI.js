@@ -1,4 +1,7 @@
 function URI(uri,safeCopy){
+  if(uri instanceof URI){
+    return uri;
+  }
   safeCopy = safeCopy !== false;
   uri = trim(safeCopy ? makeArray(uri,true) : uri);
   this.protocol = uri[0];
