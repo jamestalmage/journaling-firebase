@@ -114,11 +114,13 @@ FirebaseProxy.prototype.on_value = function(path, value, priority, disablePrunin
   this._data = mergeValues(currentPath, path, data, value, listeners, disablePruning, false);
 };
 
-function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, disablePruning, listening){
+function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, disablePruning, listening, initialized){
   if(!listeners && !listening) return oldValue;
   listening = listening || (listeners && listeners['.events']);
+  initialized = initialized || (listeners && listeners['.initialized']);
   var newProp;
   if(remainingPath.length){
+    var nextToLast = remainingPath.length === 1;
 
     var propName = remainingPath.shift();
     var propListeners = listeners && listeners[propName];
@@ -136,9 +138,10 @@ function mergeValues(currentPath, remainingPath, oldValue, newValue, listeners, 
 
     var events = listeners && listeners['.events'];
     if(events){
+      var propInitialized = initialized || nextToLast || (propListeners && propListeners['.initialized']);
       var pathString = currentPath.join('/');
-      emitChildEvent(events, pathString + '/' + propName, newProp, oldProp);
-      events.emit('value', new FakeSnapshot(pathString,copy));
+      if(propInitialized) emitChildEvent(events, pathString + '/' + propName, newProp, oldProp);
+      if(initialized) events.emit('value', new FakeSnapshot(pathString,copy));
     }
     return copy;
   } else {

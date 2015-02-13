@@ -365,7 +365,7 @@ describe('FirebaseProxy',function(){
       proxy.on(path1,'child_changed',spy2);
       proxy.on(path1,'child_removed',spy3);
       proxy.on(path1,'value',spy4);
-      proxy.on_value(path2,'c'); //not called for the initial value
+      proxy.on_value(path1,{c:'c'}); //must set the initial value so we are initialized
       proxy.on_value(path2,'d');
       proxy.on_value(path2,null); //not called on removal
 
@@ -376,6 +376,26 @@ describe('FirebaseProxy',function(){
         .and.calledWith(snapVal({c:'c'}, null, 'b'))
         .and.calledWith(snapVal({c:'d'}, null, 'b'))
         .and.calledWith(snapVal(null, null, 'b'));
+    });
+
+    it('child_added will be called for immediate parent even if parent is not initialized',function(){
+      var path1 = 'https://mock/a/b'.split('/');
+      var path2 = 'https://mock/a/b/c'.split('/');
+
+      proxy.on(path1,'child_added',spy1);
+      proxy.on_value(path2,'c');
+
+      expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('c'));
+    });
+
+    it('child_added will NOT be called for grandparent or higher if not initialized',function(){
+      var path1 = 'https://mock/a/b'.split('/');
+      var path2 = 'https://mock/a/b/c/d'.split('/');
+
+      proxy.on(path1,'child_added',spy1);
+      proxy.on_value(path2,'d');
+
+      expect(spy1).not.to.have.been.called;
     });
 
     it('will call child_removed listeners for removed children',function(){
