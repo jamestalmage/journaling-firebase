@@ -104,7 +104,7 @@ FirebaseProxy.prototype._getData = function(path){
   return data;
 };
 
-FirebaseProxy.prototype.on_value = function(path, value, priority, disablePruning){
+FirebaseProxy.prototype.set = function(path, value, priority, disablePruning){
   var listeners = this._listeners;
   var data = this._data;
   value = utils.mergePriority(value, priority);

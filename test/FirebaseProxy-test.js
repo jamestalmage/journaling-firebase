@@ -106,7 +106,7 @@ describe('FirebaseProxy',function(){
       var path = 'https://mock/a/b'.split('/');
 
       proxy.on(path,'value',spy1);  // listen to the location so data will be cached
-      proxy.on_value(path,{c:'d'},3); // provide the data to cache
+      proxy.set(path,{c:'d'},3); // provide the data to cache
 
       proxy.on(path,'value',spy2);
 
@@ -121,7 +121,7 @@ describe('FirebaseProxy',function(){
       var path = 'https://mock/a/b'.split('/');
 
       proxy.on(path,'value',spy1);  // listen to the location so data will be cached
-      proxy.on_value(path,false); // provide the data to cache
+      proxy.set(path,false); // provide the data to cache
 
       proxy.on(path,'value',spy2);
 
@@ -133,7 +133,7 @@ describe('FirebaseProxy',function(){
       var path2 = 'https://mock/a/b/c'.split('/');
 
       proxy.on(path,'value',spy1);  // listen to the location so data will be cached
-      proxy.on_value(path,{c:'d'}); // provide the data to cache
+      proxy.set(path,{c:'d'}); // provide the data to cache
 
       proxy.on(path2,'value',spy2);
 
@@ -148,7 +148,7 @@ describe('FirebaseProxy',function(){
       var path2 = 'https://mock/a/b/c'.split('/');
 
       proxy.on(path,'value',spy1);  // listen to the location so data will be cached
-      proxy.on_value(path,{d:'e'}); // provide the data to cache
+      proxy.set(path,{d:'e'}); // provide the data to cache
 
       proxy.on(path2,'value',spy2);
 
@@ -160,7 +160,7 @@ describe('FirebaseProxy',function(){
       var path2 = 'https://mock/a/b/c'.split('/');
 
       proxy.on(path,'value',spy1);  // listen to the location so data will be cached
-      proxy.on_value(path,false); // provide the data to cache
+      proxy.set(path,false); // provide the data to cache
 
       proxy.on(path2,'value',spy2);
 
@@ -173,12 +173,12 @@ describe('FirebaseProxy',function(){
       var path = 'https://mock/a/b'.split('/');
 
       proxy.on(path,'value',spy);
-      proxy.on_value(path,3);
+      proxy.set(path,3);
       expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(3));
 
       spy.reset();
       proxy.off(path,'value',spy);
-      proxy.on_value(path,4);
+      proxy.set(path,4);
       expect(spy).not.to.have.been.called;
     });
 
@@ -263,8 +263,8 @@ describe('FirebaseProxy',function(){
       var path2 = 'https://mock/a/b/d/f'.split('/');
       proxy.on(path1,'value',spy1);
       proxy.on(path2,'value',spy2);
-      proxy.on_value('https://mock/a/b/c'.split('/'),{e:'foo'});
-      proxy.on_value('https://mock/a/b/d'.split('/'),{f:'bar'});
+      proxy.set('https://mock/a/b/c'.split('/'),{e:'foo'});
+      proxy.set('https://mock/a/b/d'.split('/'),{f:'bar'});
       proxy.off(path1,'value',spy1);
       expect(fbWrapper.stopWatching).to.have.been.calledOnce;
       expect(fbWrapper.stopWatching.firstCall.args[0]).to.equal('https://mock/a/b/c/e');
@@ -273,13 +273,13 @@ describe('FirebaseProxy',function(){
     });
   });
 
-  describe('on_value(path, value, [priority])',function(){
+  describe('set(path, value, [priority])',function(){
     it('will call registered value callbacks',function(){
       var path = 'https://mock/a/b'.split('/');
       proxy.on(path,'value',spy1);
       proxy.on(path,'value',spy2);
 
-      proxy.on_value(path,{c:'d'},3);
+      proxy.set(path,{c:'d'},3);
 
       expect(spy1).to.have.been.calledOnce;
       expect(spy2).to.have.been.calledOnce;
@@ -297,7 +297,7 @@ describe('FirebaseProxy',function(){
 
     it('does nothing if there are no values registered at that location', function(){
       var path = 'https://mock/a/b'.split('/');
-      proxy.on_value(path,{c:'d'});
+      proxy.set(path,{c:'d'});
     });
 
     it('will call value listeners on children', function(){
@@ -306,7 +306,7 @@ describe('FirebaseProxy',function(){
 
       proxy.on(path2,'value',spy2);
 
-      proxy.on_value(path1,{c:'d'});
+      proxy.set(path1,{c:'d'});
 
       expect(spy2).to.have.been.calledOnce;
       var snap2 = spy2.firstCall.args[0];
@@ -319,10 +319,10 @@ describe('FirebaseProxy',function(){
       var path1 = 'https://mock/a/b'.split('/');
       var path2 = 'https://mock/a/b/c'.split('/');
       proxy.on(path2,'value',spy);
-      proxy.on_value(path1,{a:'d'});
+      proxy.set(path1,{a:'d'});
       expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(null));
       spy.reset();
-      proxy.on_value(path1,{c:false});
+      proxy.set(path1,{c:false});
       expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(false));
     });
 
@@ -330,7 +330,7 @@ describe('FirebaseProxy',function(){
       var path1 = 'https://mock/a/b'.split('/');
 
       proxy.on(path1,'child_added',spy1);
-      proxy.on_value(path1,{a:'a'});
+      proxy.set(path1,{a:'a'});
 
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a',null,'a'));
     });
@@ -339,9 +339,9 @@ describe('FirebaseProxy',function(){
       var path1 = 'https://mock/a/b'.split('/');
 
       proxy.on(path1,'child_changed',spy1);
-      proxy.on_value(path1,{a:'a'}); //not called for the initial value
-      proxy.on_value(path1,{a:'b'});
-      proxy.on_value(path1,null); //not called on removal
+      proxy.set(path1,{a:'a'}); //not called for the initial value
+      proxy.set(path1,{a:'b'});
+      proxy.set(path1,null); //not called on removal
 
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('b',null,'a'));
     });
@@ -350,9 +350,9 @@ describe('FirebaseProxy',function(){
       var path1 = 'https://mock/a/b'.split('/');
 
       proxy.on(path1,'child_changed',spy1);
-      proxy.on_value(path1,{a:'a'}); //not called for the initial value
-      proxy.on_value(path1,{a:{'.value':'a','.priority':1}});
-      proxy.on_value(path1,null); //not called on removal
+      proxy.set(path1,{a:'a'}); //not called for the initial value
+      proxy.set(path1,{a:{'.value':'a','.priority':1}});
+      proxy.set(path1,null); //not called on removal
 
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a',1,'a'));
     });
@@ -365,9 +365,9 @@ describe('FirebaseProxy',function(){
       proxy.on(path1,'child_changed',spy2);
       proxy.on(path1,'child_removed',spy3);
       proxy.on(path1,'value',spy4);
-      proxy.on_value(path1,{c:'c'}); //must set the initial value so we are initialized
-      proxy.on_value(path2,'d');
-      proxy.on_value(path2,null); //not called on removal
+      proxy.set(path1,{c:'c'}); //must set the initial value so we are initialized
+      proxy.set(path2,'d');
+      proxy.set(path2,null); //not called on removal
 
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('c',null,'c')); // child_added
       expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal('d',null,'c')); // child_changed
@@ -383,7 +383,7 @@ describe('FirebaseProxy',function(){
       var path2 = 'https://mock/a/b/c'.split('/');
 
       proxy.on(path1,'child_added',spy1);
-      proxy.on_value(path2,'c');
+      proxy.set(path2,'c');
 
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('c'));
     });
@@ -393,7 +393,7 @@ describe('FirebaseProxy',function(){
       var path2 = 'https://mock/a/b/c/d'.split('/');
 
       proxy.on(path1,'child_added',spy1);
-      proxy.on_value(path2,'d');
+      proxy.set(path2,'d');
 
       expect(spy1).not.to.have.been.called;
     });
@@ -402,9 +402,9 @@ describe('FirebaseProxy',function(){
       var path1 = 'https://mock/a/b'.split('/');
 
       proxy.on(path1,'child_removed',spy1);
-      proxy.on_value(path1,{a:'a'}); //not called for the initial value
-      proxy.on_value(path1,{a:'b'}); // not called for changed values
-      proxy.on_value(path1,null);
+      proxy.set(path1,{a:'a'}); //not called for the initial value
+      proxy.set(path1,{a:'b'}); // not called for changed values
+      proxy.set(path1,null);
 
       expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('b',null,'a'));
     });
@@ -419,9 +419,9 @@ describe('FirebaseProxy',function(){
       }
       proxy.on(path1,'value',setLatest);
 
-      proxy.on_value(path1,{d:'foo',b:{'.priority':3,c:'bar'}});
+      proxy.set(path1,{d:'foo',b:{'.priority':3,c:'bar'}});
       expect(latestValue).to.eql({d:'foo',b:{c:'bar'}});
-      proxy.on_value(path2,null);
+      proxy.set(path2,null);
       expect(latestValue).to.eql({d:'foo'});
     });
 
@@ -429,28 +429,28 @@ describe('FirebaseProxy',function(){
       var path = 'https://mock/a/b'.split('/');
       proxy.on(path,'value',spy);
 
-      proxy.on_value(path,'a',1);
+      proxy.set(path,'a',1);
       expect(spy,'firstCall').to.have.been.calledOnce.and.calledWith(snapVal('a',1));
       spy.reset();
-      proxy.on_value(path,'a',1);
+      proxy.set(path,'a',1);
       expect(spy).not.to.have.been.called;
       spy.reset();
-      proxy.on_value(path,'a',2);
+      proxy.set(path,'a',2);
       expect(spy,'val: "a", 1 -> 2').to.have.been.calledOnce.and.calledWith(snapVal('a',2));
       spy.reset();
-      proxy.on_value(path,'a');
+      proxy.set(path,'a');
       expect(spy,'val: "a", pri: 2 -> null').to.have.been.calledOnce.and.calledWith(snapVal('a',null));
       spy.reset();
-      proxy.on_value(path,'a',3);
+      proxy.set(path,'a',3);
       expect(spy,'val: "a", pri: null -> 3').to.have.been.calledOnce.and.calledWith(snapVal('a',3));
       spy.reset();
-      proxy.on_value(path,{a:'a'});
+      proxy.set(path,{a:'a'});
       expect(spy,'val: "a" -> {a:"a"}, pri: 3 -> null').to.have.been.calledOnce.and.calledWith(snapVal({a:'a'},null));
       spy.reset();
-      proxy.on_value(path,{a:'a'},4);
+      proxy.set(path,{a:'a'},4);
       expect(spy,'val: {a:"a"}, pri: null -> 4').to.have.been.calledOnce.and.calledWith(snapVal({a:'a'},4));
       spy.reset();
-      proxy.on_value(path,{a:'a'});
+      proxy.set(path,{a:'a'});
       expect(spy,'val: {a:"a"}, pri: 4 -> null').to.have.been.calledOnce.and.calledWith(snapVal({a:'a'},null));
     });
 
@@ -458,10 +458,10 @@ describe('FirebaseProxy',function(){
       var path = 'https://mock/a/b'.split('/');
       proxy.on(path,'value',spy);
 
-      proxy.on_value(path,'a',1);
+      proxy.set(path,'a',1);
       expect(spy,'firstCall').to.have.been.calledOnce.and.calledWith(snapVal('a',1));
       spy.reset();
-      proxy.on_value(path,'b',1);
+      proxy.set(path,'b',1);
       expect(spy,'val: a -> b, pri:1').to.have.been.calledOnce.and.calledWith(snapVal('b',1));
       spy.reset();
     });
@@ -471,36 +471,36 @@ describe('FirebaseProxy',function(){
         var path = 'https://mock/a/b'.split('/');
         proxy.on(path,'value',spy);
 
-        proxy.on_value(path,'a');
+        proxy.set(path,'a');
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal('a'));
         spy.reset();
-        proxy.on_value(path,'a');
+        proxy.set(path,'a');
         expect(spy,'a').not.to.have.been.called;
 
-        proxy.on_value(path,true);
+        proxy.set(path,true);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(true));
         spy.reset();
-        proxy.on_value(path,true);
+        proxy.set(path,true);
         expect(spy,'true').not.to.have.been.called;
 
-        proxy.on_value(path,false);
+        proxy.set(path,false);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(false));
         spy.reset();
-        proxy.on_value(path,false);
+        proxy.set(path,false);
         expect(spy,'false').not.to.have.been.called;
 
-        proxy.on_value(path,0);
+        proxy.set(path,0);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(0));
         spy.reset();
-        proxy.on_value(path,0);
+        proxy.set(path,0);
         expect(spy,'0').not.to.have.been.called;
 
-        proxy.on_value(path,1);
+        proxy.set(path,1);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(1));
         spy.reset();
-        proxy.on_value(path,1);
+        proxy.set(path,1);
         expect(spy,'1a').not.to.have.been.called;
-        proxy.on_value(path,1);
+        proxy.set(path,1);
         expect(spy,'1b').not.to.have.been.called;
       });
 
@@ -512,25 +512,25 @@ describe('FirebaseProxy',function(){
         proxy.on(path1,'value',spy1);
         proxy.on(path2,'value',spy2);
 
-        proxy.on_value(path,{a:'a',b:'b'});
+        proxy.set(path,{a:'a',b:'b'});
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal({a:'a',b:'b'}));
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a'));
         expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal('b'));
 
         resetSpies(spy,spy1,spy2);
-        proxy.on_value(path,{a:'a',b:'b'});
+        proxy.set(path,{a:'a',b:'b'});
         expect(spy).not.to.have.been.called;
         expect(spy1).not.to.have.been.called;
         expect(spy2).not.to.have.been.called;
 
         resetSpies(spy,spy1,spy2);
-        proxy.on_value(path,{a:'a',b:'c'});
+        proxy.set(path,{a:'a',b:'c'});
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal({a:'a',b:'c'}));
         expect(spy1).not.to.have.been.called;
         expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal('c'));
 
         resetSpies(spy,spy1,spy2);
-        proxy.on_value(path,{a:'d',b:'c'});
+        proxy.set(path,{a:'d',b:'c'});
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal({a:'d',b:'c'}));
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('d'));
         expect(spy2).not.to.have.been.called;
@@ -546,7 +546,7 @@ describe('FirebaseProxy',function(){
         proxy.on(path1,'value',spy1);
         proxy.on(path2,'value',spy2);
 
-        proxy.on_value(path,null);
+        proxy.set(path,null);
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal(null));
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
         expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(null));
@@ -560,9 +560,9 @@ describe('FirebaseProxy',function(){
         proxy.on(path1,'value',spy1);
         proxy.on(path2,'value',spy2);
 
-        proxy.on_value(path,{b:'b'});
+        proxy.set(path,{b:'b'});
         resetSpies(spy,spy1,spy2);
-        proxy.on_value(path,{a:'a'});
+        proxy.set(path,{a:'a'});
         expect(spy).to.have.been.calledOnce.and.calledWith(snapVal({a:'a'}));
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a'));
         expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(null));
@@ -574,7 +574,7 @@ describe('FirebaseProxy',function(){
      it('will get the data from the specified path',function(){
        var path1 = 'https://mock/a/b/c'.split('/');
        proxy.on(path1,'value',spy);
-       proxy.on_value(path1,{a:'b'});
+       proxy.set(path1,{a:'b'});
        expect(proxy._getData(path1)).to.eql({a:'b'});
      });
 
@@ -582,7 +582,7 @@ describe('FirebaseProxy',function(){
        var path1 = 'https://mock/a/b/c'.split('/');
        var path2 = 'https://mock/a/b/d'.split('/');
        proxy.on(path1,'value',spy);
-       proxy.on_value(path1,{a:'b'});
+       proxy.set(path1,{a:'b'});
        expect(proxy._getData(path2)).to.equal(null);
      });
   });
@@ -591,7 +591,7 @@ describe('FirebaseProxy',function(){
     it('will prune unwatched data once listeners are removed',function(){
       var path1 = 'https://mock/a/b/c'.split('/');
       proxy.on(path1,'value',spy);
-      proxy.on_value(path1,{a:'b'});
+      proxy.set(path1,{a:'b'});
       proxy.off(path1,'value',spy);
       expect(proxy._getData(path1)).to.equal(null);
     });
@@ -602,7 +602,7 @@ describe('FirebaseProxy',function(){
       var path2 = 'https://mock/a/b/d'.split('/');
       proxy.on(path1,'value',spy1);
       proxy.on(path2,'value',spy2);
-      proxy.on_value(path,{c:'c',d:'d'},null,true);
+      proxy.set(path,{c:'c',d:'d'},null,true);
       proxy.off(path1,'value',spy1);
       expect(proxy._getData(path)).to.eql({c:'c',d:'d'});
     });
@@ -613,7 +613,7 @@ describe('FirebaseProxy',function(){
       var path2 = 'https://mock/a/b/d'.split('/');
       proxy.on(path1,'value',spy1);
       proxy.on(path2,'value',spy2);
-      proxy.on_value(path,{c:'c',d:'d'},null,true);
+      proxy.set(path,{c:'c',d:'d'},null,true);
       proxy.off(path1,'value',spy1);
       proxy.off(path2,'value',spy2);
       expect(proxy._getData(path)).to.eql(null);
@@ -628,8 +628,8 @@ describe('FirebaseProxy',function(){
       proxy.on(path1,'value',spy1);
       proxy.on(path2,'value',spy2);
       proxy.on(path4,'value',spy3);
-      proxy.on_value(path,{c:'c',d:'d'},null,true);
-      proxy.on_value(path3,{c:'c',d:'d'},null,true);
+      proxy.set(path,{c:'c',d:'d'},null,true);
+      proxy.set(path3,{c:'c',d:'d'},null,true);
       proxy.off(path1,'value',spy1);
       proxy.off(path2,'value',spy2);
       expect(proxy._getData(path)).to.eql(null);
@@ -640,7 +640,7 @@ describe('FirebaseProxy',function(){
 
     it('unwatched data will never be set',function(){
       var path = 'https://mock/a/b'.split('/');
-      proxy.on_value(path,{c:'c',d:'d'},null,true);
+      proxy.set(path,{c:'c',d:'d'},null,true);
       expect(proxy._getData(path)).to.equal(null);
     });
   });
