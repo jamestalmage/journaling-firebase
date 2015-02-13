@@ -26,8 +26,8 @@ FirebaseProxy.prototype.on = function (path, eventType, callback, cancelCallback
     listenersStack.push(listeners);
     var propName = path[i];
     listeners = listeners[propName] || (listeners[propName] = {});
-    initialized = initialized || (listeners && listeners['.initialized']);
-    listening = listening || (listeners && listeners['.events']);
+    initialized = initialized || listeners['.initialized'];
+    listening = listening || listeners['.events'];
     data = safelyGetProperty(data,propName);
   }
 
@@ -57,10 +57,11 @@ FirebaseProxy.prototype.off = function(path, eventType, callback, cancelCallback
   for(var i = 0, len = path.length; i < len; i++){
     listenersStack.push(listeners);
     propName = path[i];
-    if(!(listeners = listeners[propName])){
+    listeners = listeners[propName];
+    if(!listeners){
       return;
     }
-    listening = listening || (listeners['.events']);
+    listening = listening || listeners['.events'];
   }
 
   var events = listeners['.events'];
