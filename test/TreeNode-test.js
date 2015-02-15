@@ -403,7 +403,9 @@ describe('TreeNode',function(){
           node.setValue({a:'a'});
           node.flushChanges();
           node.child('b',true).on('value',spy1);
+          node.child('a',true).on('value',spy2);
           expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
+          expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal('a',null,'a'));
         });
       });
     });
