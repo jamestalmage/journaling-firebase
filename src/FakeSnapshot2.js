@@ -1,30 +1,29 @@
 var utils = require('./utils');
 
-function createSnapshotClasses(generateRef){
-
-  function SnapshotBase(path, _value, _priority){
-    if(arguments.length === 0) return;
-    if(typeof path === 'string') path = pathToArray(path);
+  function makeSnapshot(ref, _value, _priority){
     var value = getValue(_value);
     var priority = getPriority(_value, _priority);
     if(typeof value === 'object' && value !== null){
       var children = [];
       for(var i in value){
         if(value.hasOwnProperty(i) && i.charAt(0) !== '.'){
-          path.push(i);
-          var child = new SnapshotBase(path, value[i]);
-          path.pop();
+          var child = makeSnapshot(ref.child(i), value[i]);
           if(child.exists()){
             children.push(child);
           }
         }
       }
       children.sort(utils.orderByPriorityComparator);
-      return new ObjectSnapshot(path.join('/'), children, priority);
+      return new ObjectSnapshot(ref, children, priority);
     } else {
-      return new LeafSnapshot(path.join('/'), value, priority);
+      return new LeafSnapshot(ref, value, priority);
     }
   }
+
+function SnapshotBase(ref, priority){
+  this._ref = ref;
+  this._priority = priority;
+}
 
   function pathToArray(path){
     path = path.split('/');
@@ -59,7 +58,7 @@ function createSnapshotClasses(generateRef){
   };
 
   SnapshotBase.prototype.key = function(){
-    return this._key;
+    return this._ref.key();
   };
 
   SnapshotBase.prototype.name = function(){
@@ -71,19 +70,11 @@ function createSnapshotClasses(generateRef){
   };
 
   SnapshotBase.prototype.ref = function(){
-    return generateRef(this._path);
-  };
-  
-  SnapshotBase.prototype._buildVal = function(obj){
-    obj[this.key()] = this.val();
-  };
-
-  SnapshotBase.prototype._buildExportVal = function(obj){
-    obj[this.key()] = this.exportVal();
+    return this._ref;
   };
 
   SnapshotBase.prototype._emptyChild = function(path){
-    return new LeafSnapshot(this._path + '/' + path, null, null);
+    return new LeafSnapshot(this.ref().child(path), null, null);
   };
 
   SnapshotBase.prototype.child = abstractMethod;
@@ -98,11 +89,8 @@ function createSnapshotClasses(generateRef){
 
 
 
-  function LeafSnapshot(path, value, priority){
-    path = this._pathToArray(path);
-    this._path = path.join('/');
-    this._key = path[path.length-1];
-    this._priority = priority;
+  function LeafSnapshot(ref, value, priority){
+    SnapshotBase.call(this,ref,priority);
     this._value = value;
   }
 
@@ -150,11 +138,8 @@ function createSnapshotClasses(generateRef){
 
 
 
-  function ObjectSnapshot(path, children, priority){
-    path = this._pathToArray(path);
-    this._path = path.join('/');
-    this._key = path[path.length-1];
-    this._priority = priority;
+  function ObjectSnapshot(ref, children, priority){
+    SnapshotBase.call(this, ref, priority);
     this._children = children;
     this.__childMap = null;
   }
@@ -230,8 +215,6 @@ function createSnapshotClasses(generateRef){
     return val;
   };
 
-  return SnapshotBase;
-}
 
 
 function abstractMethod(){
@@ -239,4 +222,4 @@ function abstractMethod(){
 }
 
 
-module.exports = createSnapshotClasses;
+module.exports = makeSnapshot;

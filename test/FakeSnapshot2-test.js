@@ -6,21 +6,22 @@ describe('FakeSnapshot2',function() {
   var sinon = require('sinon');
   chai.use(require('sinon-chai'));
 
-  var FakeSnapshot = require('../src/FakeSnapshot2')();
+  var FakeSnapshot = require('../src/FakeSnapshot2');
 
+  var FakeRef = require('../src/FakeRef');
 
   function makeSnapshot(val,pri){
-    return new FakeSnapshot('https://blah.com/test',val,pri);
+    return new FakeSnapshot(new FakeRef('https://blah.com/test'),val,pri);
   }
 
   describe('#key()',function(){
     it(' is described by the URI',function(){
-      expect(new FakeSnapshot('https://blah.com/test','a').key()).to.equal('test');
+      expect(new FakeSnapshot(new FakeRef('https://blah.com/test'),'a').key()).to.equal('test');
       //expect(new FakeSnapshot('https://blah.com/','a').key()).to.equal(null);
     });
 
     it(' is aliased by #name()',function(){
-      expect(new FakeSnapshot('https://blah.com/test','a').name()).to.equal('test');
+      expect(new FakeSnapshot(new FakeRef('https://blah.com/test'),'a').name()).to.equal('test');
       //expect(new FakeSnapshot('https://blah.com/','a').name()).to.equal(null);
     });
   });

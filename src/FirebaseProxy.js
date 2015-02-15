@@ -1,9 +1,13 @@
 'use strict';
 
 var EventEmitter = require('./EventEmitter');
-var FakeSnapshot = require('./FakeSnapshot2')();
+var makeSnapshot = require('./FakeSnapshot2');
+var FakeRef = require('./FakeRef');
 var utils = require('./utils');
 
+function FakeSnapshot(path,value,priority){
+  return makeSnapshot(new FakeRef(path), value, priority);
+}
 
 function FirebaseProxy(firebaseWrapper){
   this._wrapper = firebaseWrapper;

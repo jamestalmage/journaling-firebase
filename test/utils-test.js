@@ -3,7 +3,13 @@
 var sinon               = require('sinon');
 var expect              = require('chai').use(require('sinon-chai')).expect;
 var utils               = require('../src/utils');
-var Snapshot            = require('../src/FakeSnapshot2')();
+var makeSnapshot        = require('../src/FakeSnapshot2');
+var FakeRef             = require('../src/FakeRef');
+
+function Snapshot(path,value,pri){
+  return makeSnapshot(new FakeRef(path),value,pri);
+}
+
 
 describe('utils',function(){
   describe('#orderByKey',function(){
