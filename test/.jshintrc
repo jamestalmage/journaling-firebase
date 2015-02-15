@@ -2,5 +2,5 @@
   "mocha":true,
   "browserify":true,
   "expr":true,
-  "predef":["xit"]
+  "predef":["xit","xdescribe"]
 }

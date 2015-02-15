@@ -1,4 +1,6 @@
+'use strict';
 describe('TreeNode',function(){
+  //region Initialization
 
   // Assertion Framework
   var chai = require('chai');
@@ -37,6 +39,32 @@ describe('TreeNode',function(){
     }, message);
   }
 
+  // Convenience Methods
+  function resetSpies(){
+    for(var i = 0; i < arguments.length; i++){
+      arguments[i].reset();
+    }
+  }
+
+  function isSpy(method){
+    return (typeof method === 'function' && typeof method.getCall === 'function') || false;
+  }
+
+  function setAndFlush(opt_path, val, var_spies_to_reset){
+    var spies = Array.prototype.slice.call(arguments,1);
+    if(val === undefined || isSpy(val)){
+      val = opt_path;
+      opt_path = null;
+    }
+    else {
+      spies.shift();
+    }
+    (opt_path ? node.child(opt_path, true) : node).setValue(val);
+    node.flushChanges();
+    resetSpies.apply(null,spies);
+  }
+
+
   // Source Under Test
   var TreeNode = require('../src/TreeNode');
 
@@ -50,7 +78,7 @@ describe('TreeNode',function(){
     spy2 = sinon.spy();
     spy3 = sinon.spy();
   });
-
+  //endregion
 
   // TESTS
 
@@ -199,32 +227,27 @@ describe('TreeNode',function(){
 
     describe('returns true once setValue is called with a ',function(){
       it('string',function(){
-        node.setValue('foo');
-        node.flushChanges();
+        setAndFlush('foo');
         expect(node.initialized).to.equal(true);
       });
 
       it('boolean',function(){
-        node.setValue(false);
-        node.flushChanges();
+        setAndFlush(false);
         expect(node.initialized).to.equal(true);
       });
 
       it('number',function(){
-        node.setValue(3);
-        node.flushChanges();
+        setAndFlush(3);
         expect(node.initialized).to.equal(true);
       });
 
       it('null',function(){
-        node.setValue(null);
-        node.flushChanges();
+        setAndFlush(null);
         expect(node.initialized).to.equal(true);
       });
 
       it('object', function(){
-        node.setValue({a:'b'});
-        node.flushChanges();
+        setAndFlush({a:'b'});
         expect(node.initialized).to.equal(true);
       });
     });
@@ -240,8 +263,7 @@ describe('TreeNode',function(){
 
       it('are called if setValue was initially set to null',function(){
         node.on('value',spy1);
-        node.setValue(null);
-        node.flushChanges();
+        setAndFlush(null);
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
       });
 
@@ -276,8 +298,6 @@ describe('TreeNode',function(){
         node.setValue({a:{b:{c:'c'}}});
         expect(spy1.called).to.equal(false);
         node.flushChanges();
-
-        console.log(spy1.firstCall.args[0].val());
 
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:{b:{c:'c'}}}));
         spy1.reset();
@@ -338,6 +358,26 @@ describe('TreeNode',function(){
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:{b:{c:'c'}}}));
       });
 
+      it('are called when setValue is called on child node', function(){
+        node.setValue({a:'a'});
+        node.on('value',spy1);
+        node.flushChanges();
+        spy1.reset();
+        node.child('a').setValue('b');
+        node.flushChanges();
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:'b'}));
+      });
+
+      it('are called on a deep child', function(){
+        node.setValue({a:{b:'c'}});
+        node.on('value',spy1);
+        node.flushChanges();
+        spy1.reset();
+        node.child('a/b').setValue('d');
+        node.flushChanges();
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:{b:'d'}}));
+      });
+
       describe('on child nodes',function(){
         it('are called when the child\'s value changes' ,function(){
           node.setValue({a:'a'});
@@ -366,6 +406,12 @@ describe('TreeNode',function(){
           expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
         });
       });
+    });
+
+    xdescribe('"child_changed" events ',function(){
+      it('');
+
+
     });
   });
 

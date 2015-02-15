@@ -37,12 +37,19 @@ TreeNode.prototype.flushChanges = function(){
   if(this._changed || initializing){
     this._changed = false;
     this._value = this._pendingValue;
-    this._valueSnap = this._buildValueSnap();
-    if(this._value === null && !this._hasValueChildren()){
+    var oldSnap = this._valueSnap;
+    var newSnap = this._buildValueSnap();
+    this._valueSnap = newSnap;
+    if (newSnap.exists()) {
+      if(!(oldSnap && oldSnap.exists())){
+        this._registerValue();
+        //this._emitEventOnParent('child_added',newSnap);
+      }
+      else {
+        this._emitEventOnParent('child_changed', newSnap);
+      }
+    } else {
       this._deregisterValue();
-    }
-    else {
-      this._registerValue();
     }
     this.emit('value',this._valueSnap);
   }
@@ -107,6 +114,7 @@ TreeNode.prototype._registerChange = function(){
 
 TreeNode.prototype._registerChangedChild = function(child){
   this._changedChildren.push(child);
+  this._registerChange();
 };
 
 TreeNode.prototype._registerValue = function(){
@@ -162,6 +170,15 @@ TreeNode.prototype.child = function(path,create){
     }
   }
   return child;
+};
+
+TreeNode.prototype._emitChildEvent = function (eventType, snap){
+  this._events.emit(eventType,snap);
+  this._registerChange();
+};
+
+TreeNode.prototype._emitEventOnParent = function(eventType, snap){
+  if(this._parent) this._parent._emitChildEvent(eventType,snap);
 };
 
 TreeNode.prototype._getChild = function(key){
