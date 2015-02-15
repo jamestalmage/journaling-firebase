@@ -39,6 +39,15 @@ SnapshotBase.prototype._emptyChild = function(path){
   return new LeafSnapshot(this.ref().child(path), null, null);
 };
 
+SnapshotBase.prototype.toString = function(){
+  var buffer = ['Snapshot'];
+  var key = this.key();
+  if(key !== null){
+    buffer.push(':',key);
+  }
+  buffer.push('(',JSON.stringify(this.exportVal()),')');
+  return buffer.join('');
+};
 
 function abstractMethod(){
   throw new Error('abstractMethod');

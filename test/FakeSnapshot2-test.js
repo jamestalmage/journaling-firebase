@@ -301,4 +301,29 @@ describe('FakeSnapshot2',function() {
       expect(snap.child('b').exists()).to.equal(false);
     });
   });
+
+  describe('#toString',function(){
+    it('will not display key if null (i.e. the root snapshot)', function(){
+      var rootSnap = new FakeSnapshot(new FakeRef('https://foo.com'),'hello');
+      expect(rootSnap.toString()).to.equal('Snapshot("hello")');
+    });
+
+    it('will show key for non root locations', function(){
+      var keyedSnap = new FakeSnapshot(new FakeRef('https://foo.com/bar'),null);
+      expect(keyedSnap.toString()).to.equal('Snapshot:bar(null)');
+    });
+
+    it('will display json contents', function(){
+      expect(makeSnapshot({a:true}).toString()).to.equal('Snapshot:test({"a":true})');
+    });
+
+    it('will display ".priority" and ".value" as necessary', function(){
+      var str = makeSnapshot(false,1).toString();
+      var prefix = 'Snapshot:test(', len = prefix.length;
+      var jsonPortion = str.substr(len,str.length-(len+1));
+
+      expect(str.indexOf(prefix)).to.equal(0);
+      expect(JSON.parse(jsonPortion)).to.eql({'.value':false,'.priority':1});
+    });
+  });
 });
