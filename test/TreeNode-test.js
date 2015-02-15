@@ -8,6 +8,35 @@ describe('TreeNode',function(){
   chai.use(require('sinon-chai'));
 
 
+  // Custom Sinon Matcher
+
+  function snapVal(expectedVal,pri, key){
+    var message = 'snapshot value of ' + JSON.stringify(expectedVal);
+    var testPri = arguments.length > 1 && pri !== false;
+    var testKey = arguments.length > 2;
+    if(testPri){
+      message += ', and priority ' + JSON.stringify(pri);
+    }
+    if(testKey){
+      message += ', and key ' + JSON.stringify(key);
+    }
+    return sinon.match(function(snap){
+      try {
+        expect(snap.val(), 'snap value').to.eql(expectedVal);
+        if(testPri){
+          expect(snap.getPriority(),'snap priority').to.equal(pri);
+        }
+        if(testKey){
+          expect(snap.key(),'snap key').to.equal(key);
+        }
+      }
+      catch(e){
+        return false;
+      }
+      return true;
+    }, message);
+  }
+
   // Source Under Test
   var TreeNode = require('../src/TreeNode');
 
@@ -206,22 +235,56 @@ describe('TreeNode',function(){
       it('are not called if setValue has never been called',function(){
         node.on('value',spy1);
         node.flushChanges();
-        expect(spy1).not.to.have.been.called;
+        expect(spy1.called).to.equal(false);
       });
 
-      it('is called if setValue was initially set to null',function(){
+      it('are called if setValue was initially set to null',function(){
         node.on('value',spy1);
         node.setValue(null);
         node.flushChanges();
-        expect(spy1).to.have.been.called;
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
       });
 
       it('are called when value changes', function(){
         node.on('value',spy1);
         node.setValue(true);
-        expect(spy1).not.to.have.been.called;
+        expect(spy1.called).to.equal(false);
         node.flushChanges();
-        expect(spy1).to.have.been.called;
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(true));
+        spy1.reset();
+        node.setValue(false);
+        expect(spy1.called).to.equal(false);
+        node.flushChanges();
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(false));
+      });
+
+      it('are called when value changes - shallow object', function(){
+        node.on('value',spy1);
+        node.setValue({a:'a',b:'b'});
+        expect(spy1.called).to.equal(false);
+        node.flushChanges();
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:'a',b:'b'}));
+        spy1.reset();
+        node.setValue({a:'a',b:'c'});
+        expect(spy1.called).to.equal(false);
+        node.flushChanges();
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:'a',b:'c'}));
+      });
+
+      it('are called when value changes - deep object', function(){
+        node.on('value',spy1);
+        node.setValue({a:{b:{c:'c'}}});
+        expect(spy1.called).to.equal(false);
+        node.flushChanges();
+
+        console.log(spy1.firstCall.args[0].val());
+
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:{b:{c:'c'}}}));
+        spy1.reset();
+        node.setValue({a:{b:{c:'d'}}});
+        expect(spy1.called).to.equal(false);
+        node.flushChanges();
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:{b:{c:'d'}}}));
       });
 
       it('are not called when setValue() does not change anything', function(){
@@ -234,11 +297,45 @@ describe('TreeNode',function(){
         expect(spy1.called).to.equal(false);
       });
 
+      it('are not called when setValue() does not change anything - shallow object', function(){
+        node.setValue({a:'a',b:'b'});
+        node.on('value',spy1);
+        node.flushChanges();
+        spy1.reset();
+        node.setValue({a:'a',b:'b'});
+        node.flushChanges();
+        expect(spy1.called).to.equal(false);
+      });
+
+      it('are not called when setValue() does not change anything - deep object', function(){
+        node.setValue({a:{b:{c:'c'}}});
+        node.on('value',spy1);
+        node.flushChanges();
+        spy1.reset();
+        node.setValue({a:{b:{c:'c'}}});
+        node.flushChanges();
+        expect(spy1.called).to.equal(false);
+      });
+
       it('are called immediately when value has already been set', function(){
         node.setValue('foo');
         node.flushChanges();
         node.on('value',spy1);
-        expect(spy1.called).to.equal(true);
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('foo'));
+      });
+
+      it('are called immediately when value has already been set - shallow object', function(){
+        node.setValue({a:'a',b:'b'});
+        node.flushChanges();
+        node.on('value',spy1);
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:'a',b:'b'}));
+      });
+
+      it('are called immediately when value has already been set - deep object', function(){
+        node.setValue({a:{b:{c:'c'}}});
+        node.flushChanges();
+        node.on('value',spy1);
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:{b:{c:'c'}}}));
       });
 
       describe('on child nodes',function(){
@@ -249,7 +346,7 @@ describe('TreeNode',function(){
           spy1.reset();
           node.setValue({a:'b'});
           node.flushChanges();
-          expect(spy1.called).to.equal(true);
+          expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('b'));
         });
 
         it('are not called when the child\'s value stays the same' ,function(){
@@ -266,7 +363,7 @@ describe('TreeNode',function(){
           node.setValue({a:'a'});
           node.flushChanges();
           node.child('b',true).on('value',spy1);
-          expect(spy1.called).to.equal(true);
+          expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
         });
       });
     });
@@ -305,7 +402,7 @@ describe('TreeNode',function(){
 
     it('returns the same node each time',function(){
       node.setValue({a:'a'});
-      expect(node.child('a')).to.equal(node.child('a'));
+      expect(node.child('a',true)).to.equal(node.child('a'));
       expect(node.child('b',true)).to.equal(node.child('b')).and.to.not.equal(null);
     });
   });

@@ -1,12 +1,18 @@
 'use strict';
 
 var EventEmitter = require('./EventEmitter');
+var LeafSnapshot = require('./LeafSnapshot');
+var ObjectSnapshot = require('./ObjectSnapshot');
+var utils = require('./utils');
+var FakeRef = require('./FakeRef');
 
 function TreeNode(key, parent){
   this._parent = parent || null;
   this._events = new EventEmitter();
   this._children = {};
+  this._valueChildren = {};
   this._changedChildren = [];
+  this._valueSnap = null;
   this._value = null;
   this._pendingValue = null;
   this._changed = false;
@@ -31,14 +37,21 @@ TreeNode.prototype.flushChanges = function(){
   if(this._changed || initializing){
     this._changed = false;
     this._value = this._pendingValue;
-    this.emit('value');
+    this._valueSnap = this._buildValueSnap();
+    if(this._value === null && !this._hasValueChildren()){
+      this._deregisterValue();
+    }
+    else {
+      this._registerValue();
+    }
+    this.emit('value',this._valueSnap);
   }
 };
 
 TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
   this._events.on.apply(this._events,arguments);
   if(this.initialized){
-    callback();
+    callback(this._valueSnap);
   }
 };
 
@@ -94,6 +107,45 @@ TreeNode.prototype._registerChange = function(){
 
 TreeNode.prototype._registerChangedChild = function(child){
   this._changedChildren.push(child);
+};
+
+TreeNode.prototype._registerValue = function(){
+  if(this._parent) this._parent._registerValueChild(this);
+};
+
+TreeNode.prototype._deregisterValue = function(){
+  if(this._parent) this._parent._deregisterValueChild(this);
+};
+
+TreeNode.prototype._registerValueChild = function(child){
+  this._valueChildren[child.key] = child;
+  //this._registerValue();
+};
+
+TreeNode.prototype._deregisterValueChild = function(child){
+  delete this._valueChildren[child.key];
+  //if(!this._hasValueChildren()) this._deregisterValue();
+};
+
+TreeNode.prototype._hasValueChildren = function(){
+  return !!(Object.getOwnPropertyNames(this._valueChildren).length);
+};
+
+TreeNode.prototype._buildValueSnap = function(){
+  if(this._hasValueChildren()){
+    var children = [];
+    for(var i in this._valueChildren){
+      /* istanbul ignore else */
+      if(this._valueChildren.hasOwnProperty(i)){
+        children.push(this._valueChildren[i]._buildValueSnap());
+      }
+    }
+    //TODO: Sort Children According To OrderByXXX
+    return new ObjectSnapshot(new FakeRef('https://blah.com/' + this.key), children, null);
+  }
+  else {
+    return new LeafSnapshot(new FakeRef('https://blah.com/' + this.key), this._value, null);
+  }
 };
 
 TreeNode.prototype.child = function(path,create){
