@@ -461,7 +461,7 @@ describe('TreeNode',function(){
   describe('#key ',function(){
     it('contains the key passed to constructor',function(){
       node = new TreeNode('a');
-      expect(node.key).to.equal('a');
+      expect(node.key()).to.equal('a');
     });
   });
 
@@ -474,13 +474,13 @@ describe('TreeNode',function(){
     it('will return the child if one exists', function(){
       node.setValue({a:'a'});
       expect(node.child('a')).to.be.an.instanceOf(TreeNode);
-      expect(node.child('a').key).to.equal('a');
+      expect(node.child('a').key()).to.equal('a');
     });
 
     it('will return a deep child', function(){
       node.setValue({a:{b:'c'}});
       expect(node.child('a/b')).to.be.an.instanceOf(TreeNode);
-      expect(node.child('a/b').key).to.equal('b');
+      expect(node.child('a/b').key()).to.equal('b');
     });
 
     it('will create a child even if one does not exist', function(){

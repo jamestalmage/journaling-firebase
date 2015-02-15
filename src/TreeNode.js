@@ -16,7 +16,7 @@ function TreeNode(key, parent){
   this._value = null;
   this._pendingValue = null;
   this._changed = false;
-  this.key = key;
+  this._key = key;
   this.initialized = false;
   this._initializeNextFlush = false;
 }
@@ -64,6 +64,10 @@ TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
 
 TreeNode.prototype.emit = function(){
   this._events.emit.apply(this._events,arguments);
+};
+
+TreeNode.prototype.key = function(){
+  return this._key;
 };
 
 TreeNode.prototype.setValue = function(value){
@@ -126,11 +130,11 @@ TreeNode.prototype._deregisterValue = function(){
 };
 
 TreeNode.prototype._registerValueChild = function(child){
-  this._valueChildren[child.key] = child;
+  this._valueChildren[child.key()] = child;
 };
 
 TreeNode.prototype._deregisterValueChild = function(child){
-  delete this._valueChildren[child.key];
+  delete this._valueChildren[child.key()];
 };
 
 TreeNode.prototype._hasValueChildren = function(){
@@ -148,10 +152,10 @@ TreeNode.prototype._buildValueSnap = function(){
     }
     //TODO: Sort Children According To OrderByXXX
     //TODO: Create Meaningful Refs
-    return new ObjectSnapshot(new FakeRef('https://blah.com/' + this.key), children, null);
+    return new ObjectSnapshot(new FakeRef('https://blah.com/' + this.key()), children, null);
   }
   else {
-    return new LeafSnapshot(new FakeRef('https://blah.com/' + this.key), this._value, null);
+    return new LeafSnapshot(new FakeRef('https://blah.com/' + this.key()), this._value, null);
   }
 };
 
