@@ -408,7 +408,7 @@ describe('TreeNode',function(){
       });
     });
 
-    describe('"child_changed" events ', function(){
+    describe('"child_changed" listeners ', function(){
       it('are called when an child leaf node changes values', function(){
         node.on('child_changed',spy1);
         setAndFlush({a:'a'});
@@ -456,9 +456,71 @@ describe('TreeNode',function(){
         expect(spy1.called).to.equal(false);
       });
     });
+
+    describe('"child_added" listeners ', function(){
+      it('are called the first time child is set', function(){
+        node.on('child_added', spy1);
+        setAndFlush({a:'a'});
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a', null, 'a'));
+      });
+
+      it('are not called when the value changes', function(){
+        node.on('child_added', spy1);
+        setAndFlush({a:'a'});  //will call
+        setAndFlush({a:'b'});  //won't call
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a', null, 'a'));
+      });
+
+      it('are not called if new null child nodes are created', function(){
+        node.on('child_added', spy1);
+        setAndFlush({a:'a'}, spy1);
+        setAndFlush('b', null);
+        expect(spy1.called).to.equal(false);
+      });
+
+      it('are not called if value is removed', function(){
+        node.on('child_added', spy1);
+        setAndFlush({a:'a', b:'b'}, spy1);
+        setAndFlush({a:'a'});
+        expect(spy1.called).to.equal(false);
+      });
+
+      it('are called immediately for existing value', function(){
+        setAndFlush({a:'a', b:'b'});
+        node.on('child_added', spy1);
+        expect(spy1).to.have.been.calledTwice
+          .and.calledWith(snapVal('a', null, 'a'))
+          .and.calledWith(snapVal('b', null, 'b'));
+      });
+    });
+
+    describe('"child_removed" listeners ', function () {
+      it('are not called for initial values', function () {
+        node.on('child_removed', spy1);
+        node.setValue({a:'a'});
+        node.child('b', true).setValue(null);
+        node.flushChanges();
+        expect(spy1.called).to.equal(false);
+      });
+
+      it('are called when children get removed', function () {
+        node.on('child_removed', spy1);
+        setAndFlush({a:'a', b:'b', c:'c'});
+        setAndFlush({b:'d'});
+        expect(spy1).to.have.been.calledTwice
+          .and.calledWith(snapVal('a', null, 'a'))
+          .and.calledWith(snapVal('c', null, 'c'));
+      });
+
+      it('are not called when added to node with initialized value', function () {
+        setAndFlush({a:'a'});
+        node.on('child_removed', spy1);
+        expect(spy1.called).to.equal(false);
+      });
+    });
   });
 
-  describe('#key ',function(){
+  describe('#key ', function(){
     it('contains the key passed to constructor',function(){
       node = new TreeNode('a');
       expect(node.key()).to.equal('a');
@@ -495,6 +557,4 @@ describe('TreeNode',function(){
       expect(node.child('b',true)).to.equal(node.child('b')).and.to.not.equal(null);
     });
   });
-
-
 });

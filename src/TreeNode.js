@@ -43,13 +43,16 @@ TreeNode.prototype.flushChanges = function(){
     if (newSnap.exists()) {
       if(!(oldSnap && oldSnap.exists())){
         this._registerValue();
-        //this._emitEventOnParent('child_added',newSnap);
+        this._emitEventOnParent('child_added', newSnap);
       }
       else {
         this._emitEventOnParent('child_changed', newSnap);
       }
     } else {
-      this._deregisterValue();
+      if(oldSnap && oldSnap.exists()){
+        this._deregisterValue();
+        this._emitEventOnParent('child_removed', oldSnap);
+      }
     }
     this.emit('value',this._valueSnap);
   }
@@ -58,7 +61,17 @@ TreeNode.prototype.flushChanges = function(){
 TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
   this._events.on.apply(this._events,arguments);
   if(this.initialized){
-    callback(this._valueSnap);
+    switch (eventType){
+      case 'value':
+        callback(this._valueSnap);
+        break;
+
+      case 'child_added':
+        this._valueSnap.forEach(function(snap){
+          callback(snap);
+        });
+        break;
+    }
   }
 };
 
@@ -202,4 +215,3 @@ TreeNode.prototype._getOrCreateChild = function(key){
 };
 
 module.exports = TreeNode;
-
