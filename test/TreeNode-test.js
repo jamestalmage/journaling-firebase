@@ -408,10 +408,53 @@ describe('TreeNode',function(){
       });
     });
 
-    xdescribe('"child_changed" events ',function(){
-      it('');
+    describe('"child_changed" events ', function(){
+      it('are called when an child leaf node changes values', function(){
+        node.on('child_changed',spy1);
+        setAndFlush({a:'a'});
+        expect(spy1.called).to.equal(false);
+        setAndFlush({a:'b'});
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('b', null, 'a'));
+      });
 
+      it('are called when an child object node changes values', function(){
+        node.on('child_changed',spy1);
+        setAndFlush({a:{b:'c'}});
+        setAndFlush({a:{b:'d'}});
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({b:'d'}, null, 'a'));
+      });
 
+      it('are not called when new child nodes are created but set to null', function(){
+        node.on('child_changed',spy1);
+        setAndFlush({a:{b:'c'}});
+        setAndFlush('a/d',null);
+        expect(spy1.called).to.equal(false);
+        expect(node.child('a/d').initialized).to.equal(true);
+      });
+
+      it('are called only for changed children', function(){
+        node.on('child_changed',spy1);
+        setAndFlush({a:'a',b:'b'});
+        setAndFlush({a:'a',b:'d'});
+        expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('d',null,'b'));
+      });
+
+      it('are called for each changed child', function(){
+        node.on('child_changed',spy1);
+        setAndFlush({a:'a',b:'b'});
+        setAndFlush({a:'c',b:'d'});
+        expect(spy1).to.have.been.calledTwice
+          .and.calledWith(snapVal('c',null,'a'))
+          .and.calledWith(snapVal('d',null,'b'));
+      });
+
+      it('are not called if changes are reverted before a flush', function(){
+        node.on('child_changed',spy1);
+        setAndFlush({a:'a',b:'b'});
+        node.setValue({a:'c',b:'d'});
+        setAndFlush({a:'a',b:'b'});
+        expect(spy1.called).to.equal(false);
+      });
     });
   });
 

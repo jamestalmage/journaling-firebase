@@ -127,12 +127,10 @@ TreeNode.prototype._deregisterValue = function(){
 
 TreeNode.prototype._registerValueChild = function(child){
   this._valueChildren[child.key] = child;
-  //this._registerValue();
 };
 
 TreeNode.prototype._deregisterValueChild = function(child){
   delete this._valueChildren[child.key];
-  //if(!this._hasValueChildren()) this._deregisterValue();
 };
 
 TreeNode.prototype._hasValueChildren = function(){
@@ -149,6 +147,7 @@ TreeNode.prototype._buildValueSnap = function(){
       }
     }
     //TODO: Sort Children According To OrderByXXX
+    //TODO: Create Meaningful Refs
     return new ObjectSnapshot(new FakeRef('https://blah.com/' + this.key), children, null);
   }
   else {
