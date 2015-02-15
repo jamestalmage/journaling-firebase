@@ -1,7 +1,7 @@
 'use strict';
 
 var EventEmitter = require('./EventEmitter');
-var FakeSnapshot = require('./FakeSnapshot');
+var FakeSnapshot = require('./FakeSnapshot2')();
 var utils = require('./utils');
 
 

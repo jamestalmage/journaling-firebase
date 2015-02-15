@@ -3,7 +3,7 @@
 var sinon               = require('sinon');
 var expect              = require('chai').use(require('sinon-chai')).expect;
 var utils               = require('../src/utils');
-var Snapshot            = require('../src/FakeSnapshot');
+var Snapshot            = require('../src/FakeSnapshot2')();
 
 describe('utils',function(){
   describe('#orderByKey',function(){
