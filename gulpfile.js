@@ -103,6 +103,13 @@ gulp.task('release', ['bundle', 'bump'], function () {
   ])();
 });
 
+gulp.task('install-git-hooks',function(){
+  return plugins.shell.task([
+    'cp ./pre-commit.sh .git/hooks/pre-commit',
+    'chmod +x .git/hooks/pre-commit'
+  ])();
+});
+
 gulp.task('lint', function(){
    return gulp.src(['src/*.js','test/*.js'])
      .pipe(plugins.jshint())
