@@ -142,7 +142,7 @@ function createSnapshotClasses(generateRef){
       return {
         '.value':this._value,
         '.priority':this._priority
-      }
+      };
     }
   };
 
