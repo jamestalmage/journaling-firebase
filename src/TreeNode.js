@@ -1,8 +1,10 @@
 'use strict';
 
+var EventEmitter = require('./EventEmitter');
+
 function TreeNode(key, parent){
   this._parent = parent || null;
-  this._callbacks = null;
+  this._events = new EventEmitter();
   this._children = {};
   this._changedChildren = [];
   this._value = null;
@@ -13,25 +15,35 @@ function TreeNode(key, parent){
   this._initializeNextFlush = false;
 }
 
-require('./EventEmitter')(TreeNode.prototype);
-
 TreeNode.prototype.flushChanges = function(){
   var changedChildren = this._changedChildren;
+  var initializing = this._initializeNextFlush;
+  if(initializing) {
+    this._initializeNextFlush = false;
+    this.initialized = true;
+  }
   if(changedChildren.length){
     this._changedChildren = [];
     changedChildren.forEach(function(child){
       child.flushChanges();
     });
   }
-  if(this._changed || this._initializeNextFlush){
+  if(this._changed || initializing){
     this._changed = false;
     this._value = this._pendingValue;
     this.emit('value');
   }
-  if(this._initializeNextFlush) {
-    this._initializeNextFlush = false;
-    this.initialized = true;
+};
+
+TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
+  this._events.on.apply(this._events,arguments);
+  if(this.initialized){
+    callback();
   }
+};
+
+TreeNode.prototype.emit = function(){
+  this._events.emit.apply(this._events,arguments);
 };
 
 TreeNode.prototype.setValue = function(value){
@@ -106,7 +118,15 @@ TreeNode.prototype._getChild = function(key){
 
 TreeNode.prototype._getOrCreateChild = function(key){
   var children = this._children;
-  return children[key] || (children[key] = new TreeNode(key,this));
+  var child = children[key];
+  if(!child){
+    child = children[key] = new TreeNode(key,this);
+    if(this.initialized){
+      child.setValue(null);
+      child.flushChanges();
+    }
+  }
+  return child;
 };
 
 module.exports = TreeNode;

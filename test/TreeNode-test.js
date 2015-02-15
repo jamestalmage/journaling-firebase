@@ -224,7 +224,7 @@ describe('TreeNode',function(){
         expect(spy1).to.have.been.called;
       });
 
-      it('are not called when setValue() does not change anything',function(){
+      it('are not called when setValue() does not change anything', function(){
         node.setValue('foo');
         node.on('value',spy1);
         node.flushChanges();
@@ -232,6 +232,13 @@ describe('TreeNode',function(){
         node.setValue('foo');
         node.flushChanges();
         expect(spy1.called).to.equal(false);
+      });
+
+      it('are called immediately when value has already been set', function(){
+        node.setValue('foo');
+        node.flushChanges();
+        node.on('value',spy1);
+        expect(spy1.called).to.equal(true);
       });
 
       describe('on child nodes',function(){
@@ -253,6 +260,13 @@ describe('TreeNode',function(){
           node.setValue({a:'a'});
           node.flushChanges();
           expect(spy1.called).to.equal(false);
+        });
+
+        it('are called immediately on new children if value was already set', function(){
+          node.setValue({a:'a'});
+          node.flushChanges();
+          node.child('b',true).on('value',spy1);
+          expect(spy1.called).to.equal(true);
         });
       });
     });
