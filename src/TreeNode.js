@@ -147,7 +147,7 @@ TreeNode.prototype._buildValueSnap = function(){
     for(var i in this._valueChildren){
       /* istanbul ignore else */
       if(this._valueChildren.hasOwnProperty(i)){
-        children.push(this._valueChildren[i]._buildValueSnap());
+        children.push(this._valueChildren[i]._valueSnap);
       }
     }
     //TODO: Sort Children According To OrderByXXX
