@@ -11,7 +11,7 @@ function TreeNode(key, parent){
   this._events = new EventEmitter();
   this._children = {};
   this._valueChildren = {};
-  this._changedChildren = [];
+  this._childrenToFlush = [];
   this._valueSnap = null;
   this._value = null;
   this._pendingValue = null;
@@ -23,7 +23,7 @@ function TreeNode(key, parent){
 }
 
 TreeNode.prototype.flushChanges = function(){
-  var changedChildren = this._changedChildren;
+  var changedChildren = this._childrenToFlush;
   this._changeRegistered = false;
   var initializing = this._initializeNextFlush;
   if(initializing) {
@@ -31,7 +31,7 @@ TreeNode.prototype.flushChanges = function(){
     this.initialized = true;
   }
   if(changedChildren.length){
-    this._changedChildren = [];
+    this._childrenToFlush = [];
     changedChildren.forEach(function(child){
       child.flushChanges();
     });
@@ -89,7 +89,7 @@ TreeNode.prototype.setValue = function(value){
   var initializeNextFlush = this._initializeNextFlush = !this.initialized;
   var changed = this._changed = this._setValue(value);
   if(changed || initializeNextFlush){
-    this._registerChange();
+    this._scheduleFlush();
   }
   return changed;
 };
@@ -118,19 +118,19 @@ TreeNode.prototype._setValue = function(value){
   }
 };
 
-TreeNode.prototype._registerChange = function(){
+TreeNode.prototype._scheduleFlush = function(){
   if(!this._changeRegistered){
     this._changeRegistered = true;
     var parent = this._parent;
     if(parent){
-      parent._registerChangedChild(this);
+      parent._scheduleChildFlush(this);
     }
   }
 };
 
-TreeNode.prototype._registerChangedChild = function(child){
-  this._changedChildren.push(child);
-  this._registerChange();
+TreeNode.prototype._scheduleChildFlush = function(child){
+  this._childrenToFlush.push(child);
+  this._scheduleFlush();
 };
 
 TreeNode.prototype._registerValue = function(){
@@ -190,7 +190,7 @@ TreeNode.prototype.child = function(path,create){
 TreeNode.prototype._emitChildEvent = function (eventType, snap){
   this._events.emit(eventType,snap);
   this._changed = true;
-  this._registerChange();
+  this._scheduleFlush();
 };
 
 TreeNode.prototype._emitEventOnParent = function(eventType, snap){
