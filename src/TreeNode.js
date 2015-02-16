@@ -62,7 +62,7 @@ TreeNode.prototype._flush = function(){
         this._emitEventOnParent('child_removed', oldSnap);
       }
     }
-    this.emit('value', newSnap);
+    this._events.emit('value', newSnap);
   }
 };
 
@@ -81,10 +81,6 @@ TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
         break;
     }
   }
-};
-
-TreeNode.prototype.emit = function(){
-  this._events.emit.apply(this._events,arguments);
 };
 
 TreeNode.prototype.ref = function(){
