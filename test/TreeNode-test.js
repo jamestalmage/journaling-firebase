@@ -67,13 +67,15 @@ describe('TreeNode',function(){
 
   // Source Under Test
   var TreeNode = require('../src/TreeNode');
+  var FakeRef = require('../src/FakeRef');
 
 
   // Test Initialization
-  var node,spy1,spy2,spy3;
+  var ref, node, spy1, spy2, spy3;
 
   beforeEach(function(){
-    node = new TreeNode();
+    ref = new FakeRef('https://host.com');
+    node = new TreeNode(ref);
     spy1 = sinon.spy();
     spy2 = sinon.spy();
     spy3 = sinon.spy();
@@ -539,7 +541,7 @@ describe('TreeNode',function(){
 
   describe('#key ', function(){
     it('contains the key passed to constructor',function(){
-      node = new TreeNode('a');
+      node = new TreeNode(new FakeRef('https://somewhere.com/a'));
       expect(node.key()).to.equal('a');
     });
   });

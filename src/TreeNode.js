@@ -7,7 +7,7 @@ var FlushQueue = require('./FlushQueue');
 var utils = require('./utils');
 var FakeRef = require('./FakeRef');
 
-function TreeNode(key, parent){
+function TreeNode(ref, parent){
   this._parent = parent || null;
   if (parent) {
     this._rootQueue = parent._rootQueue;
@@ -23,7 +23,7 @@ function TreeNode(key, parent){
   this._value = null;
   this._pendingValue = null;
   this._changed = false;
-  this._key = key;
+  this._ref = ref;
   this.initialized = false;
   this._initializeNextFlush = false;
 }
@@ -84,8 +84,12 @@ TreeNode.prototype.emit = function(){
   this._events.emit.apply(this._events,arguments);
 };
 
+TreeNode.prototype.ref = function(){
+  return this._ref;
+};
+
 TreeNode.prototype.key = function(){
-  return this._key;
+  return this._ref.key();
 };
 
 TreeNode.prototype.setValue = function(value){
@@ -109,7 +113,7 @@ TreeNode.prototype._setValue = function(value){
     }
     for(var j in value){
       if(value.hasOwnProperty(j) && !children.hasOwnProperty(j)){
-        var child = children[j] = new TreeNode(j, this);
+        var child = children[j] = new TreeNode(this.ref().child(j), this);
         changed = child.setValue(value[j]) || changed;
       }
     }
@@ -153,10 +157,10 @@ TreeNode.prototype._buildValueSnap = function(){
     //TODO: Sort Children According To OrderByXXX
     //TODO: Create Meaningful Refs
     //TODO: Include priority
-    return new ObjectSnapshot(new FakeRef('https://blah.com/' + this.key()), children, null);
+    return new ObjectSnapshot(this.ref(), children, null);
   }
   else {
-    return new LeafSnapshot(new FakeRef('https://blah.com/' + this.key()), this._value, null);
+    return new LeafSnapshot(this.ref(), this._value, null);
   }
 };
 
@@ -193,7 +197,7 @@ TreeNode.prototype._getOrCreateChild = function(key){
   var children = this._children;
   var child = children[key];
   if(!child){
-    child = children[key] = new TreeNode(key,this);
+    child = children[key] = new TreeNode(this.ref().child(key),this);
     if(this.initialized){
       child._initEmpty();
     }
