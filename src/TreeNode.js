@@ -21,7 +21,9 @@ function TreeNode(ref, parent){
   this._valueChildren = {};
   this._valueSnap = null;
   this._value = null;
+  this._priority = null;
   this._pendingValue = null;
+  this._pendingPriority = null;
   this._changed = false;
   this._ref = ref;
   this._initialized = false;
@@ -42,6 +44,7 @@ TreeNode.prototype._flush = function(){
   if(changed || initializing){
     this._changed = false;
     this._value = this._pendingValue;
+    this._priority = this._pendingPriority;
     var oldSnap = this._valueSnap;
     var newSnap = this._buildValueSnap();
     this._valueSnap = newSnap;
@@ -106,27 +109,44 @@ TreeNode.prototype.setValue = function(value){
 };
 
 TreeNode.prototype._setValue = function(value){
-  if(typeof value === 'object' && value !==null){
-    var children = this._children;
-    var changed = false;
-    for(var i in children){
-      /* istanbul ignore else */
-      if(children.hasOwnProperty(i)){
-        changed = children[i].setValue(value.hasOwnProperty(i) ? value[i] : null) || changed;
-      }
+  if(typeof value === 'object' && value !== null){
+    if(value.hasOwnProperty('.value')){
+      return this._setLeafValue(value['.value'], value['.priority']);
     }
-    for(var j in value){
-      if(value.hasOwnProperty(j) && !children.hasOwnProperty(j)){
-        var child = children[j] = new TreeNode(this.ref().child(j), this);
-        changed = child.setValue(value[j]) || changed;
-      }
-    }
-    return changed;
+    return this._setObjectValue(value);
   }
   else {
-    this._pendingValue = value;
-    return value !== this._value;
+    return this._setLeafValue(value, null);
   }
+};
+
+TreeNode.prototype._setObjectValue = function(value){
+  var children = this._children;
+  var changed = false;
+  for(var i in children){
+    /* istanbul ignore else */
+    if(children.hasOwnProperty(i)){
+      changed = children[i].setValue(value.hasOwnProperty(i) ? value[i] : null) || changed;
+    }
+  }
+  for(var j in value){
+    if(value.hasOwnProperty(j) && !children.hasOwnProperty(j) && j.charAt(0) !== '.'){
+      var child = children[j] = new TreeNode(this.ref().child(j), this);
+      changed = child.setValue(value[j]) || changed;
+    }
+  }
+  if(value.hasOwnProperty('.priority')){
+    var priority = value['.priority'];
+    this._pendingPriority = priority;
+    changed = priority !== this._priority || changed;
+  }
+  return changed;
+};
+
+TreeNode.prototype._setLeafValue = function(value, priority){
+  this._pendingValue = value;
+  this._pendingPriority = priority;
+  return value !== this._value || priority !== this._priority;
 };
 
 TreeNode.prototype._registerValue = function(){
@@ -161,10 +181,10 @@ TreeNode.prototype._buildValueSnap = function(){
     //TODO: Sort Children According To OrderByXXX
     //TODO: Create Meaningful Refs
     //TODO: Include priority
-    return new ObjectSnapshot(this.ref(), children, null);
+    return new ObjectSnapshot(this.ref(), children, this._priority);
   }
   else {
-    return new LeafSnapshot(this.ref(), this._value, null);
+    return new LeafSnapshot(this.ref(), this._value, this._priority);
   }
 };
 

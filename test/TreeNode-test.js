@@ -282,6 +282,24 @@ describe('TreeNode',function(){
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(false));
       });
 
+      it('are called when only priority changes - leaf node',function(){
+        node.on('value',spy1);
+        setAndFlush({'.value':'foo','.priority':'bar'});
+        setAndFlush({'.value':'foo','.priority':'baz'});
+        expect(spy1).to.have.been.calledTwice
+          .and.calledWith(snapVal('foo', 'bar', null))
+          .and.calledWith(snapVal('foo', 'baz', null));
+      });
+
+      it('are called when only priority changes - object node',function(){
+        node.on('value',spy1);
+        setAndFlush({'a':'a','.priority':'bar'});
+        setAndFlush({'a':'a','.priority':'baz'});
+        expect(spy1).to.have.been.calledTwice
+          .and.calledWith(snapVal({a:'a'}, 'bar', null))
+          .and.calledWith(snapVal({a:'a'}, 'baz', null));
+      });
+
       it('are called when value changes - shallow object', function(){
         node.on('value',spy1);
         node.setValue({a:'a',b:'b'});
@@ -293,6 +311,17 @@ describe('TreeNode',function(){
         expect(spy1.called).to.equal(false);
         node.flushChanges();
         expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal({a:'a',b:'c'}));
+      });
+
+      it('are called when priority changes on child node', function(){
+        node.on('value',spy1);
+        setAndFlush({a:{b:{'.value':'foo','.priority':'bar'}}});
+        setAndFlush({a:{b:{'.value':'foo','.priority':'baz'}}});
+        expect(spy1.callCount).to.equal(2);
+        expect(spy1.firstCall.args[0].exportVal())
+          .to.eql({a:{b:{'.value':'foo','.priority':'bar'}}});
+        expect(spy1.secondCall.args[0].exportVal())
+          .to.eql({a:{b:{'.value':'foo','.priority':'baz'}}});
       });
 
       it('are called when value changes - deep object', function(){
