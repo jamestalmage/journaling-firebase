@@ -6,6 +6,7 @@ var ObjectSnapshot = require('./ObjectSnapshot');
 var FlushQueue = require('./FlushQueue');
 var utils = require('./utils');
 var FakeRef = require('./FakeRef');
+var dict = require('dict');
 
 function TreeNode(ref, parent){
   this._parent = parent || null;
@@ -19,8 +20,8 @@ function TreeNode(ref, parent){
     this._flushQueue = this._rootQueue.childRegistration(this, '_flush');
   }
   this._events = new EventEmitter();
-  this._children = {};
-  this._valueChildren = {};
+  this._children = dict();
+  this._valueChildren = dict();
   //this._listeningChildren = {};
   //this._forgettableChildren = {};
   this._valueSnap = null;
@@ -123,15 +124,12 @@ TreeNode.prototype._setValue = function(value){
 TreeNode.prototype._setObjectValue = function(value){
   var children = this._children;
   var changed = false;
-  for(var i in children){
-    /* istanbul ignore else */
-    if(children.hasOwnProperty(i)){
-      changed = children[i].setValue(value.hasOwnProperty(i) ? value[i] : null) || changed;
-    }
-  }
+  children.forEach(function(child, key){
+    changed = child.setValue(value.hasOwnProperty(key) ? value[key] : null) || changed;
+  }, this);
   for(var j in value){
-    if(value.hasOwnProperty(j) && !children.hasOwnProperty(j) && j.charAt(0) !== '.'){
-      var child = children[j] = new TreeNode(this.ref().child(j), this);
+    if(value.hasOwnProperty(j) && !children.has(j) && j.charAt(0) !== '.'){
+      var child = children.set(j, new TreeNode(this.ref().child(j), this));
       changed = child.setValue(value[j]) || changed;
     }
   }
@@ -145,11 +143,9 @@ TreeNode.prototype._setObjectValue = function(value){
 
 TreeNode.prototype._setLeafValue = function(value, priority){
   var children = this._children;
-  for(var i in children){
-    if(children.hasOwnProperty(i)){
-      children[i].setValue(null);
-    }
-  }
+  children.forEach(function(child){
+    child.setValue(null);
+  });
   this._pendingValue = value;
   this._pendingPriority = priority;
   return value !== this._value || priority !== this._priority;
@@ -164,26 +160,23 @@ TreeNode.prototype._deregisterValue = function(){
 };
 
 TreeNode.prototype._registerValueChild = function(child){
-  this._valueChildren[child.key()] = child;
+  this._valueChildren.set(child.key(), child);
 };
 
 TreeNode.prototype._deregisterValueChild = function(child){
-  delete this._valueChildren[child.key()];
+  this._valueChildren.delete(child.key());
 };
 
 TreeNode.prototype._hasValueChildren = function(){
-  return !!(Object.getOwnPropertyNames(this._valueChildren).length);
+  return !!this._valueChildren.size;
 };
 
 TreeNode.prototype._buildValueSnap = function(){
   if(this._hasValueChildren()){
     var children = [];
-    for(var i in this._valueChildren){
-      /* istanbul ignore else */
-      if(this._valueChildren.hasOwnProperty(i)){
-        children.push(this._valueChildren[i]._valueSnap);
-      }
-    }
+    this._valueChildren.forEach(function(child, key){
+      this.push(child._valueSnap);
+    }, children);
     //TODO: Sort Children According To OrderByXXX
     //TODO: Create Meaningful Refs
     //TODO: Include priority
@@ -220,14 +213,14 @@ TreeNode.prototype._emitEventOnParent = function(eventType, snap){
 };
 
 TreeNode.prototype._getChild = function(key){
-  return this._children[key] || null;
+  return this._children.get(key, null);
 };
 
 TreeNode.prototype._getOrCreateChild = function(key){
   var children = this._children;
-  var child = children[key];
+  var child = children.get(key);
   if(!child){
-    child = children[key] = new TreeNode(this.ref().child(key),this);
+    child = children.set(key, new TreeNode(this.ref().child(key),this));
     if(this._initialized){
       child._initEmpty();
     }
