@@ -10,15 +10,19 @@ var FakeRef = require('./FakeRef');
 function TreeNode(ref, parent){
   this._parent = parent || null;
   if (parent) {
+    //this._root = parent._root;
     this._rootQueue = parent._rootQueue;
     this._flushQueue = parent._flushQueue.childRegistration(this, '_flush');
   } else {
+    //this._root = this;
     this._rootQueue = new FlushQueue();
     this._flushQueue = this._rootQueue.childRegistration(this, '_flush');
   }
   this._events = new EventEmitter();
   this._children = {};
   this._valueChildren = {};
+  //this._listeningChildren = {};
+  //this._forgettableChildren = {};
   this._valueSnap = null;
   this._value = null;
   this._priority = null;
@@ -231,6 +235,96 @@ TreeNode.prototype._getOrCreateChild = function(key){
   return child;
 };
 
+/*TreeNode.prototype._hasLocalListeners = function(){
+  return this._events.hasListeners();
+};
+
+TreeNode.prototype._hasChildren = function(){
+  return !!(Object.getOwnPropertyNames(this._children).length);
+};
+
+TreeNode.prototype._registerAsForgettable = function(){
+  var parent = this._parent;
+  if(parent) parent._registerChildAsForgettable(this);
+};
+
+TreeNode.prototype._registerChildAsForgettable = function(child){
+  this._forgettableChildren[child.key()] = child;
+  if(!this._hasLocalListeners()) {
+    this._registerAsForgettable();
+  }
+};
+
+TreeNode.prototype._hasForgettableChildren = function(){
+  return !!(Object.getOwnPropertyNames(this._forgettableChildren).length);
+};
+
+TreeNode.prototype._deregisterAsForgettable = function(){
+  var parent = this._parent;
+  if(parent) parent._deregisterChildAsForgettable(this);
+};
+
+TreeNode.prototype._deregisterChildAsForgettable = function(child){
+  delete this._forgettableChildren[child.key()];
+  if(!this._hasForgettableChildren()){
+    this._deregisterAsForgettable();
+  }
+};
+
+TreeNode.prototype.forget = function(){
+  this._root._forget();
+};
+
+TreeNode.prototype._forget = function(){
+  if(this._hasLocalListeners()) return;
+  var forgettable = this._forgettableChildren;
+  for(var i in forgettable){
+    if(forgettable.hasOwnProperty(i)){
+      forgettable[i]._forget();
+    }
+  }
+};
+
+TreeNode.prototype._destroy = function(){
+  var parent = this._parent;
+  if(parent) parent._forgetChild(this);
+};
+
+TreeNode.prototype._forgetChild = function(child){
+  var key = child.key();
+  delete this._children[key];
+  delete this._valueChildren[key];
+  delete this._forgettableChildren[key];
+};
+ */
+/*
+
+TreeNode.prototype._listening = function(){
+  return !(this._hasListeners() || Object.getOwnPropertyNames(this._listeningChildren).length);
+};
+
+TreeNode.prototype._registerAsListening = function(){
+  var parent = this._parent;
+  if(parent) parent._registerChildAsListening(this);
+};
+
+TreeNode.prototype._registerChildAsListening = function(child){
+  this._listeningChildren[child.key()] = child;
+  this._registerAsListening();
+};
+
+TreeNode.prototype._deregisterAsListening = function(){
+  var parent = this._parent;
+  if(parent) parent._deregisterChildAsListening(this);
+};
+
+TreeNode.prototype._deregisterChildAsListening = function(child){
+  delete this._listeningChildren[child.key()];
+  if(this._listening()){
+    this._deregisterAsListening();
+  }
+};
+    */
 /**
  * Called if we know this child to currently be empty.
  * @private
