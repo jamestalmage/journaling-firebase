@@ -407,6 +407,14 @@ describe('TreeNode',function(){
           expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
           expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal('a',null,'a'));
         });
+
+        it('are called when the child gets a value on initial flush', function(){
+          node.child('a',true).on('value',spy1);
+          node.child('b',true).on('value',spy2);
+          setAndFlush({a:'a'});
+          expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a', null, 'a'));
+          expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal(null, null, 'b'));
+        });
       });
     });
 

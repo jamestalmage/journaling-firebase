@@ -16,6 +16,7 @@ function TreeNode(key, parent){
   this._value = null;
   this._pendingValue = null;
   this._changed = false;
+  this._changeRegistered = false;
   this._key = key;
   this.initialized = false;
   this._initializeNextFlush = false;
@@ -23,6 +24,7 @@ function TreeNode(key, parent){
 
 TreeNode.prototype.flushChanges = function(){
   var changedChildren = this._changedChildren;
+  this._changeRegistered = false;
   var initializing = this._initializeNextFlush;
   if(initializing) {
     this._initializeNextFlush = false;
@@ -54,7 +56,7 @@ TreeNode.prototype.flushChanges = function(){
         this._emitEventOnParent('child_removed', oldSnap);
       }
     }
-    this.emit('value',this._valueSnap);
+    this.emit('value', newSnap);
   }
 };
 
@@ -84,8 +86,12 @@ TreeNode.prototype.key = function(){
 };
 
 TreeNode.prototype.setValue = function(value){
-  this._initializeNextFlush = !this.initialized;
-  return (this._changed = this._setValue(value));
+  var initializeNextFlush = this._initializeNextFlush = !this.initialized;
+  var changed = this._changed = this._setValue(value);
+  if(changed || initializeNextFlush){
+    this._registerChange();
+  }
+  return changed;
 };
 
 TreeNode.prototype._setValue = function(value){
@@ -104,24 +110,17 @@ TreeNode.prototype._setValue = function(value){
         changed = child.setValue(value[j]) || changed;
       }
     }
-    if(changed){
-      this._registerChange();
-    }
     return changed;
   }
   else {
     this._pendingValue = value;
-    if(value !== this._value){
-      this._registerChange();
-      return true;
-    }
-    return false;
+    return value !== this._value;
   }
 };
 
 TreeNode.prototype._registerChange = function(){
-  if(!this._changed){
-    this._changed = true;
+  if(!this._changeRegistered){
+    this._changeRegistered = true;
     var parent = this._parent;
     if(parent){
       parent._registerChangedChild(this);
@@ -190,6 +189,7 @@ TreeNode.prototype.child = function(path,create){
 
 TreeNode.prototype._emitChildEvent = function (eventType, snap){
   this._events.emit(eventType,snap);
+  this._changed = true;
   this._registerChange();
 };
 
