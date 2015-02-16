@@ -408,6 +408,13 @@ describe('TreeNode',function(){
           expect(spy2).to.have.been.calledOnce.and.calledWith(snapVal('a',null,'a'));
         });
 
+        it('creating new empty nodes does not schedule a flush', function(){
+          setAndFlush({a:'a'});
+          node.child('b',true).on('value',spy1);
+          expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
+          expect(node._flushScheduled).to.equal(false);
+        });
+
         it('are called when the child gets a value on initial flush', function(){
           node.child('a',true).on('value',spy1);
           node.child('b',true).on('value',spy2);

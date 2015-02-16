@@ -16,27 +16,28 @@ function TreeNode(key, parent){
   this._value = null;
   this._pendingValue = null;
   this._changed = false;
-  this._changeRegistered = false;
+  this._flushScheduled = false;
   this._key = key;
   this.initialized = false;
   this._initializeNextFlush = false;
 }
 
 TreeNode.prototype.flushChanges = function(){
-  var changedChildren = this._childrenToFlush;
-  this._changeRegistered = false;
+  this._flushScheduled = false;
   var initializing = this._initializeNextFlush;
   if(initializing) {
     this._initializeNextFlush = false;
     this.initialized = true;
   }
-  if(changedChildren.length){
+  var childrenToFlush = this._childrenToFlush;
+  if(childrenToFlush.length){
     this._childrenToFlush = [];
-    changedChildren.forEach(function(child){
+    childrenToFlush.forEach(function(child){
       child.flushChanges();
     });
   }
-  if(this._changed || initializing){
+  var changed = this._changed;
+  if(changed || initializing){
     this._changed = false;
     this._value = this._pendingValue;
     var oldSnap = this._valueSnap;
@@ -119,8 +120,8 @@ TreeNode.prototype._setValue = function(value){
 };
 
 TreeNode.prototype._scheduleFlush = function(){
-  if(!this._changeRegistered){
-    this._changeRegistered = true;
+  if(!this._flushScheduled){
+    this._flushScheduled = true;
     var parent = this._parent;
     if(parent){
       parent._scheduleChildFlush(this);
@@ -164,6 +165,7 @@ TreeNode.prototype._buildValueSnap = function(){
     }
     //TODO: Sort Children According To OrderByXXX
     //TODO: Create Meaningful Refs
+    //TODO: Include priority
     return new ObjectSnapshot(new FakeRef('https://blah.com/' + this.key()), children, null);
   }
   else {
@@ -190,7 +192,6 @@ TreeNode.prototype.child = function(path,create){
 TreeNode.prototype._emitChildEvent = function (eventType, snap){
   this._events.emit(eventType,snap);
   this._changed = true;
-  this._scheduleFlush();
 };
 
 TreeNode.prototype._emitEventOnParent = function(eventType, snap){
@@ -207,11 +208,19 @@ TreeNode.prototype._getOrCreateChild = function(key){
   if(!child){
     child = children[key] = new TreeNode(key,this);
     if(this.initialized){
-      child.setValue(null);
-      child.flushChanges();
+      child._initEmpty();
     }
   }
   return child;
+};
+
+/**
+ * Called if we know this child to currently be empty.
+ * @private
+ */
+TreeNode.prototype._initEmpty = function(){
+  this.initialized = true;
+  this._valueSnap = this._buildValueSnap();
 };
 
 module.exports = TreeNode;
