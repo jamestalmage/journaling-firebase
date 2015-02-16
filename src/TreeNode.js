@@ -24,7 +24,7 @@ function TreeNode(ref, parent){
   this._pendingValue = null;
   this._changed = false;
   this._ref = ref;
-  this.initialized = false;
+  this._initialized = false;
   this._initializeNextFlush = false;
 }
 
@@ -36,7 +36,7 @@ TreeNode.prototype._flush = function(){
   var initializing = this._initializeNextFlush;
   if(initializing) {
     this._initializeNextFlush = false;
-    this.initialized = true;
+    this._initialized = true;
   }
   var changed = this._changed;
   if(changed || initializing){
@@ -65,7 +65,7 @@ TreeNode.prototype._flush = function(){
 
 TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
   this._events.on.apply(this._events,arguments);
-  if(this.initialized){
+  if(this._initialized){
     switch (eventType){
       case 'value':
         callback(this._valueSnap);
@@ -92,8 +92,12 @@ TreeNode.prototype.key = function(){
   return this._ref.key();
 };
 
+TreeNode.prototype.initialized = function(){
+  return this._initialized;
+};
+
 TreeNode.prototype.setValue = function(value){
-  var initializeNextFlush = this._initializeNextFlush = !this.initialized;
+  var initializeNextFlush = this._initializeNextFlush = !this._initialized;
   var changed = this._changed = this._setValue(value);
   if(changed || initializeNextFlush){
     this._flushQueue.schedule();
@@ -198,7 +202,7 @@ TreeNode.prototype._getOrCreateChild = function(key){
   var child = children[key];
   if(!child){
     child = children[key] = new TreeNode(this.ref().child(key),this);
-    if(this.initialized){
+    if(this._initialized){
       child._initEmpty();
     }
   }
@@ -210,7 +214,7 @@ TreeNode.prototype._getOrCreateChild = function(key){
  * @private
  */
 TreeNode.prototype._initEmpty = function(){
-  this.initialized = true;
+  this._initialized = true;
   this._valueSnap = this._buildValueSnap();
 };
 

@@ -224,33 +224,33 @@ describe('TreeNode',function(){
   describe('#initialized ',function(){
     it('returns false before setValue is called',function(){
       node.flushChanges();
-      expect(node.initialized).to.equal(false);
+      expect(node.initialized()).to.equal(false);
     });
 
     describe('returns true once setValue is called with a ',function(){
       it('string',function(){
         setAndFlush('foo');
-        expect(node.initialized).to.equal(true);
+        expect(node.initialized()).to.equal(true);
       });
 
       it('boolean',function(){
         setAndFlush(false);
-        expect(node.initialized).to.equal(true);
+        expect(node.initialized()).to.equal(true);
       });
 
       it('number',function(){
         setAndFlush(3);
-        expect(node.initialized).to.equal(true);
+        expect(node.initialized()).to.equal(true);
       });
 
       it('null',function(){
         setAndFlush(null);
-        expect(node.initialized).to.equal(true);
+        expect(node.initialized()).to.equal(true);
       });
 
       it('object', function(){
         setAndFlush({a:'b'});
-        expect(node.initialized).to.equal(true);
+        expect(node.initialized()).to.equal(true);
       });
     });
   });
@@ -448,7 +448,7 @@ describe('TreeNode',function(){
         setAndFlush({a:{b:'c'}});
         setAndFlush('a/d',null);
         expect(spy1.called).to.equal(false);
-        expect(node.child('a/d').initialized).to.equal(true);
+        expect(node.child('a/d')._initialized).to.equal(true);
       });
 
       it('are called only for changed children', function(){
