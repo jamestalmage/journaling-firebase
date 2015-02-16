@@ -565,6 +565,15 @@ describe('TreeNode',function(){
         node.on('child_removed', spy1);
         expect(spy1.called).to.equal(false);
       });
+
+      it('are called when transitioning from object to leaf node', function() {
+        setAndFlush({a:'a', b:'b'});
+        node.on('child_removed',spy1);
+        setAndFlush('foo');
+        expect(spy1).to.have.been.calledTwice
+          .and.calledWith(snapVal('a', null, 'a'))
+          .and.calledWith(snapVal('b', null, 'b'));
+      });
     });
   });
 

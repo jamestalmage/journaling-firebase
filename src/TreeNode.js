@@ -144,6 +144,12 @@ TreeNode.prototype._setObjectValue = function(value){
 };
 
 TreeNode.prototype._setLeafValue = function(value, priority){
+  var children = this._children;
+  for(var i in children){
+    if(children.hasOwnProperty(i)){
+      children[i].setValue(null);
+    }
+  }
   this._pendingValue = value;
   this._pendingPriority = priority;
   return value !== this._value || priority !== this._priority;
