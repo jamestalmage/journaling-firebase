@@ -412,7 +412,7 @@ describe('TreeNode',function(){
           setAndFlush({a:'a'});
           node.child('b',true).on('value',spy1);
           expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal(null));
-          expect(node._flushScheduled).to.equal(false);
+          expect(node._flushQueue._scheduled).to.equal(false);
         });
 
         it('are called when the child gets a value on initial flush', function(){

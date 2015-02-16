@@ -3,38 +3,40 @@
 var EventEmitter = require('./EventEmitter');
 var LeafSnapshot = require('./LeafSnapshot');
 var ObjectSnapshot = require('./ObjectSnapshot');
+var FlushQueue = require('./FlushQueue');
 var utils = require('./utils');
 var FakeRef = require('./FakeRef');
 
 function TreeNode(key, parent){
   this._parent = parent || null;
+  if (parent) {
+    this._rootQueue = parent._rootQueue;
+    this._flushQueue = parent._flushQueue.childRegistration(this, '_flush');
+  } else {
+    this._rootQueue = new FlushQueue();
+    this._flushQueue = this._rootQueue.childRegistration(this, '_flush');
+  }
   this._events = new EventEmitter();
   this._children = {};
   this._valueChildren = {};
-  this._childrenToFlush = [];
   this._valueSnap = null;
   this._value = null;
   this._pendingValue = null;
   this._changed = false;
-  this._flushScheduled = false;
   this._key = key;
   this.initialized = false;
   this._initializeNextFlush = false;
 }
 
-TreeNode.prototype.flushChanges = function(){
-  this._flushScheduled = false;
+TreeNode.prototype.flushChanges = function() {
+  this._rootQueue.flush();
+};
+
+TreeNode.prototype._flush = function(){
   var initializing = this._initializeNextFlush;
   if(initializing) {
     this._initializeNextFlush = false;
     this.initialized = true;
-  }
-  var childrenToFlush = this._childrenToFlush;
-  if(childrenToFlush.length){
-    this._childrenToFlush = [];
-    childrenToFlush.forEach(function(child){
-      child.flushChanges();
-    });
   }
   var changed = this._changed;
   if(changed || initializing){
@@ -90,7 +92,7 @@ TreeNode.prototype.setValue = function(value){
   var initializeNextFlush = this._initializeNextFlush = !this.initialized;
   var changed = this._changed = this._setValue(value);
   if(changed || initializeNextFlush){
-    this._scheduleFlush();
+    this._flushQueue.schedule();
   }
   return changed;
 };
@@ -117,21 +119,6 @@ TreeNode.prototype._setValue = function(value){
     this._pendingValue = value;
     return value !== this._value;
   }
-};
-
-TreeNode.prototype._scheduleFlush = function(){
-  if(!this._flushScheduled){
-    this._flushScheduled = true;
-    var parent = this._parent;
-    if(parent){
-      parent._scheduleChildFlush(this);
-    }
-  }
-};
-
-TreeNode.prototype._scheduleChildFlush = function(child){
-  this._childrenToFlush.push(child);
-  this._scheduleFlush();
 };
 
 TreeNode.prototype._registerValue = function(){
