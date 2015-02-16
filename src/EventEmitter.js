@@ -4,12 +4,16 @@ module.exports = Emitter;
 
 function Emitter(obj) {
   if (obj) return mixin(obj);
+  this._cbSize = 0;
+  this._callbacks = null;
 }
 
 function mixin(obj) {
   for (var key in Emitter.prototype) {
     obj[key] = Emitter.prototype[key];
   }
+  obj._cbSize = 0;
+  obj._callbacks = null;
   return obj;
 }
 
@@ -24,6 +28,9 @@ Emitter.prototype.on = function(eventType, callback, cancelCallback, context){
   this._callbacks = this._callbacks || {};
   (this._callbacks[eventType] = this._callbacks[eventType] || [])
     .push([callback, context || null, cancelCallback || noop]);
+
+
+  this._cbSize = (this._cbSize || 0) + 1;
 
   return callback;
 };
@@ -50,7 +57,8 @@ Emitter.prototype.off = function(eventType, callback, context){
 
   // all
   if (0 === arguments.length) {
-    this._callbacks = {};
+    this._callbacks = null;
+    this._cbSize = 0;
     return;
   }
 
@@ -61,6 +69,7 @@ Emitter.prototype.off = function(eventType, callback, context){
   // remove all handlers
   if (1 == arguments.length) {
     delete this._callbacks[eventType];
+    this._cbSize -= callbacks.length;
     return;
   }
 
@@ -72,6 +81,7 @@ Emitter.prototype.off = function(eventType, callback, context){
     cb = spec[0];
     if (context === spec[1] && (cb === callback || cb.fn === callback)) {
       callbacks.splice(i, 1);
+      this._cbSize--;
       return;
     }
   }
@@ -91,21 +101,24 @@ Emitter.prototype.emit = function(eventType){
 
 Emitter.prototype.cancel = function(eventType){
   if(!this._callbacks) return;
-  var cbObj;
+  var args = [].slice.call(arguments, 1);
+  var callbacks;
   if(eventType){
-    cbObj = {};
-    cbObj[eventType] = this._callbacks[eventType] || [];
+    callbacks = this._callbacks[eventType];
+    if(!callbacks) return;
     delete this._callbacks[eventType];
+    this._cbSize -= callbacks.length;
+    callAllSpecs(callbacks, args, 2);
   }
   else {
-    cbObj = this._callbacks;
-    delete this._callbacks;
-  }
-  var args = [].slice.call(arguments, 1);
-  for (var e in cbObj){
-    /* istanbul ignore else  */
-    if(cbObj.hasOwnProperty(e)){
-      callAllSpecs(cbObj[e], args, 2);
+    callbacks = this._callbacks;
+    this._callbacks = null;
+    this._cbSize = 0;
+    for (var e in callbacks){
+      /* istanbul ignore else  */
+      if(callbacks.hasOwnProperty(e)){
+        callAllSpecs(callbacks[e], args, 2);
+      }
     }
   }
 };
@@ -124,15 +137,11 @@ Emitter.prototype.listeners = function(eventType){
 
 Emitter.prototype.hasListeners = function(eventType){
   if(eventType){
-    return !! this.listeners(eventType).length;
+    var callbacks = this._callbacks;
+    if(!callbacks) return false;
+    callbacks = callbacks[eventType];
+    if(!callbacks) return false;
+    return !! callbacks.length;
   }
-  var callbacks = this._callbacks;
-  if(callbacks){
-    for(var i in callbacks){
-      if(callbacks.hasOwnProperty(i) && this.hasListeners(i)){
-        return true;
-      }
-    }
-  }
-  return false;
+  return !!this._cbSize;
 };
