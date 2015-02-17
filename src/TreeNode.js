@@ -91,6 +91,13 @@ TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
   }
 };
 
+/*
+  This is "clever". EventEmitter.once() wraps the supplied callback in one that calls
+ EventEmitter.off() and then executes the callback. We need the wrapper to call
+ off() on the TreeNode (not the EventEmitter) - so we can `markForgettable()` etc.
+ */
+TreeNode.prototype.once = EventEmitter.prototype.once;
+
 TreeNode.prototype.off = function(eventType, callback, cancelCallback, context){
   this._events.off.apply(this._events, arguments);
   if(!this._events.hasListeners()){
@@ -191,8 +198,6 @@ TreeNode.prototype._buildValueSnap = function(){
       this.push(child._valueSnap);
     }, children);
     //TODO: Sort Children According To OrderByXXX
-    //TODO: Create Meaningful Refs
-    //TODO: Include priority
     return new ObjectSnapshot(this.ref(), children, this._priority);
   }
   else {

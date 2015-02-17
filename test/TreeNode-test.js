@@ -684,9 +684,18 @@ describe('TreeNode',function(){
     it('will drop only necessary branches', function(){
       setAndFlush({a:{b:{c:'c'}, d:{e:'e'}}, f:{g:{h:'h'}, i:{j:'j'}}});
       node.child('a/b/c').on('value', spy1);
-      expect(node.child('a/b/c')).not.to.equal(null);
       node.forget();
       expect(node.child('a/b/c')).not.to.equal(null);
+      expect(node.child('a/b/d')).to.equal(null);
+      expect(node.child('f')).to.equal(null);
+    });
+
+    it('once listeners can be forgotten once fired', function(){
+      setAndFlush({a:{b:{c:'c'}, d:{e:'e'}}, f:{g:{h:'h'}, i:{j:'j'}}});
+      node.child('a/b/c').once('value', spy1);
+      node.forget();
+      expect(node.child('a')).to.equal(null);
+      expect(node.child('f')).to.equal(null);
     });
   });
 });
