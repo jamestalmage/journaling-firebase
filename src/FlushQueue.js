@@ -5,23 +5,52 @@ module.exports = FlushQueue;
 
 
 function FlushQueue(){
-  this._queue = [];
+  this._head = null;
+  this._tail = null;
 }
 
 FlushQueue.prototype.flush = function(){
-  var queue = this._queue;
-  this._queue = [];
-  queue.forEach(function(registration){
-    registration._call();
-  });
+  var head = this._head;
+  while(head){
+    var temp = head._right;
+    head._right = null;
+    head._left = null;
+    head._call();
+    head = temp;
+  }
+  this._head = this._tail = null;
 };
 
 FlushQueue.prototype._schedule = function(registration){
-  this._queue.push(registration);
+  if(this._head === null){
+    this._head = this._tail = registration;
+  }
+  else {
+    var oldTail = this._tail;
+    registration._left = oldTail;
+    oldTail._right = registration;
+    this._tail = registration;
+  }
 };
 
 FlushQueue.prototype._cancel = function(registration){
-  this._queue.splice(this._queue.indexOf(registration),1);
+  var right = registration._right;
+  var left = registration._left;
+  if(left === null){
+    this._head = right;
+    registration._right = null;
+    if(right) right._left = null;
+    return;
+  }
+  if(right === null){
+    this._tail = left;
+    registration._left = null;
+    left._right = null;
+    return;
+  }
+  left._right = right;
+  right._left = left;
+  registration._left = registration._right = null;
 };
 
 FlushQueue.prototype.registration = function(ctx, cb){
@@ -33,7 +62,15 @@ FlushQueue.prototype.childRegistration = function(ctx, cb){
 };
 
 FlushQueue.prototype.clear = function(){
-  this._queue = [];
+  var head = this._head;
+  while(head){
+    var temp = head._right;
+    head._right = null;
+    head._left = null;
+    head._scheduled = false;
+    head = temp;
+  }
+  this._head = this._tail = null;
 };
 
 
@@ -46,6 +83,8 @@ function Registration(queue, ctx, cb){
   this._cb = cb;
   this._scheduled = false;
   this._isString = isStringRegistrationArgs(ctx, cb);
+  this._left = null;
+  this._right = null;
 }
 
 Registration.prototype.schedule = function(){
@@ -119,7 +158,7 @@ ChildRegistration.prototype._cancel = function(registration){
 };
 
 ChildRegistration.prototype._conditionalCancel = function(){
-  if(!(this._explicityScheduled || this._childQueue._queue.length)){
+  if(!(this._explicityScheduled || this._childQueue._head)){
     Registration.prototype.cancel.call(this);
   }
 };

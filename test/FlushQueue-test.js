@@ -63,6 +63,22 @@ describe('FlushQueue',function(){
     expect(obj1.spy3.called).to.equal(false);
   });
 
+  it('cancel() the middle callback', function(){
+    var reg1 = queue.registration(obj1, 'spy1');
+    var reg2 = queue.registration(obj2, 'spy2');
+    var reg3 = queue.registration(obj3, 'spy3');
+    reg1.schedule();
+    reg2.schedule();
+    reg3.schedule();
+    reg2.cancel();
+
+    queue.flush();
+
+    expect(obj1.spy1).to.have.been.calledOnce.and.calledOn(obj1);
+    expect(obj2.spy2.called).to.equal(false);
+    expect(obj3.spy3).to.have.been.calledOnce.and.calledOn(obj3);
+  });
+
   it('callbacks can be specified as actual functions',function(){
     var reg1 = queue.registration(obj1, spy1);
     reg1.schedule();
