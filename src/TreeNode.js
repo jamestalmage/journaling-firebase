@@ -22,8 +22,8 @@ function TreeNode(ref, parent){
   this._events = new EventEmitter();
   this._children = dict();
   this._valueChildren = dict();
-  //this._listeningChildren = {};
-  //this._forgettableChildren = {};
+  this._listeningChildren = dict();
+  this._forgettableChildren = dict();
   this._valueSnap = null;
   this._value = null;
   this._priority = null;
@@ -33,6 +33,7 @@ function TreeNode(ref, parent){
   this._ref = ref;
   this._initialized = false;
   this._initializeNextFlush = false;
+  this._markForgettable();
 }
 
 TreeNode.prototype.flushChanges = function() {
@@ -73,6 +74,8 @@ TreeNode.prototype._flush = function(){
 
 TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
   this._events.on.apply(this._events,arguments);
+  this._unmarkForgettable();
+  this._markListening();
   if(this._initialized){
     switch (eventType){
       case 'value':
@@ -84,6 +87,16 @@ TreeNode.prototype.on = function(eventType, callback, cancelCallback, context) {
           callback(snap);
         });
         break;
+    }
+  }
+};
+
+TreeNode.prototype.off = function(eventType, callback, cancelCallback, context){
+  this._events.off.apply(this._events, arguments);
+  if(!this._events.hasListeners()){
+    this._unmarkListening();
+    if(this._forgettableChildren.size || !this._children.size){
+      this._markForgettable();
     }
   }
 };
@@ -228,96 +241,6 @@ TreeNode.prototype._getOrCreateChild = function(key){
   return child;
 };
 
-/*TreeNode.prototype._hasLocalListeners = function(){
-  return this._events.hasListeners();
-};
-
-TreeNode.prototype._hasChildren = function(){
-  return !!(Object.getOwnPropertyNames(this._children).length);
-};
-
-TreeNode.prototype._registerAsForgettable = function(){
-  var parent = this._parent;
-  if(parent) parent._registerChildAsForgettable(this);
-};
-
-TreeNode.prototype._registerChildAsForgettable = function(child){
-  this._forgettableChildren[child.key()] = child;
-  if(!this._hasLocalListeners()) {
-    this._registerAsForgettable();
-  }
-};
-
-TreeNode.prototype._hasForgettableChildren = function(){
-  return !!(Object.getOwnPropertyNames(this._forgettableChildren).length);
-};
-
-TreeNode.prototype._deregisterAsForgettable = function(){
-  var parent = this._parent;
-  if(parent) parent._deregisterChildAsForgettable(this);
-};
-
-TreeNode.prototype._deregisterChildAsForgettable = function(child){
-  delete this._forgettableChildren[child.key()];
-  if(!this._hasForgettableChildren()){
-    this._deregisterAsForgettable();
-  }
-};
-
-TreeNode.prototype.forget = function(){
-  this._root._forget();
-};
-
-TreeNode.prototype._forget = function(){
-  if(this._hasLocalListeners()) return;
-  var forgettable = this._forgettableChildren;
-  for(var i in forgettable){
-    if(forgettable.hasOwnProperty(i)){
-      forgettable[i]._forget();
-    }
-  }
-};
-
-TreeNode.prototype._destroy = function(){
-  var parent = this._parent;
-  if(parent) parent._forgetChild(this);
-};
-
-TreeNode.prototype._forgetChild = function(child){
-  var key = child.key();
-  delete this._children[key];
-  delete this._valueChildren[key];
-  delete this._forgettableChildren[key];
-};
- */
-/*
-
-TreeNode.prototype._listening = function(){
-  return !(this._hasListeners() || Object.getOwnPropertyNames(this._listeningChildren).length);
-};
-
-TreeNode.prototype._registerAsListening = function(){
-  var parent = this._parent;
-  if(parent) parent._registerChildAsListening(this);
-};
-
-TreeNode.prototype._registerChildAsListening = function(child){
-  this._listeningChildren[child.key()] = child;
-  this._registerAsListening();
-};
-
-TreeNode.prototype._deregisterAsListening = function(){
-  var parent = this._parent;
-  if(parent) parent._deregisterChildAsListening(this);
-};
-
-TreeNode.prototype._deregisterChildAsListening = function(child){
-  delete this._listeningChildren[child.key()];
-  if(this._listening()){
-    this._deregisterAsListening();
-  }
-};
-    */
 /**
  * Called if we know this child to currently be empty.
  * @private
@@ -328,3 +251,85 @@ TreeNode.prototype._initEmpty = function(){
 };
 
 module.exports = TreeNode;
+
+TreeNode.prototype._destroy = function(){
+  this._children.clear();
+  this._valueChildren.clear();
+  this._forgettableChildren.clear();
+  this._initialized = false;
+  this._initializeNextFlush = false;
+  this._flushQueue.cancel();
+  var parent = this._parent;
+  if(parent){
+    parent._dropChild(this);
+  }
+};
+
+TreeNode.prototype._dropChild = function(child){
+  var key = child.key();
+  this._children.delete(key);
+  this._valueChildren.delete(key);
+  this._forgettableChildren.delete(key);
+};
+
+TreeNode.prototype.forget = function(){
+  if(this._events.hasListeners()) return;
+  this._forgettableChildren.forEach(function(child){
+    child.forget();
+  });
+  if(!this._isListening()){
+    this._destroy();
+  }
+};
+
+TreeNode.prototype._markForgettable = function(){
+  var parent = this._parent;
+  if(parent){
+    parent._markChildForgettable(this);
+  }
+};
+
+TreeNode.prototype._markChildForgettable = function(child){
+  this._forgettableChildren.set(child.key(), child);
+};
+
+TreeNode.prototype._unmarkForgettable = function(){
+  var parent = this._parent;
+  if(parent){
+    parent._unmarkChildForgettable(this);
+  }
+};
+
+TreeNode.prototype._unmarkChildForgettable = function(child){
+  this._forgettableChildren.delete(child.key());
+};
+
+TreeNode.prototype._isListening = function(){
+  return (this._events.hasListeners() || !!this._listeningChildren.size);
+};
+
+TreeNode.prototype._markListening = function(){
+  var parent = this._parent;
+  if(parent){
+    parent._markChildListening(this);
+  }
+};
+
+TreeNode.prototype._markChildListening = function(child){
+  this._listeningChildren.set(child.key(), child);
+  this._markListening();
+};
+
+TreeNode.prototype._unmarkListening = function(){
+  var parent = this._parent;
+  if(parent){
+    parent._unmarkChildListening(this);
+  }
+};
+
+TreeNode.prototype._unmarkChildListening = function(child){
+  this._listeningChildren.delete(child.key());
+  if(!this._isListening()){
+    this._unmarkListening();
+  }
+};

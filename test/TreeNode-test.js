@@ -577,6 +577,16 @@ describe('TreeNode',function(){
     });
   });
 
+  describe('#off', function(){
+    it('will deregister listeners', function(){
+      node.on('value', spy1);
+      setAndFlush('a');
+      node.off('value', spy1);
+      setAndFlush('b');
+      expect(spy1).to.have.been.calledOnce.and.calledWith(snapVal('a'));
+    });
+  });
+
   describe('#key ', function(){
     it('contains the key passed to constructor',function(){
       node = new TreeNode(new FakeRef('https://somewhere.com/a'));
@@ -612,6 +622,71 @@ describe('TreeNode',function(){
       node.setValue({a:'a'});
       expect(node.child('a',true)).to.equal(node.child('a'));
       expect(node.child('b',true)).to.equal(node.child('b')).and.to.not.equal(null);
+    });
+  });
+
+  describe('#forget()',function(){
+    it('will drop children if there are no listeners', function(){
+      setAndFlush({a:'a'});
+      node.forget();
+      expect(node.child('a')).to.equal(null);
+    });
+
+    it('will no longer be initialized', function(){
+      setAndFlush({a:'a'});
+      expect(node.initialized()).to.equal(true);
+      node.forget();
+      expect(node.initialized()).to.equal(false);
+    });
+
+    it('will not initialize next flush', function(){
+      node.setValue({a:'a'});
+      node.forget();
+      node.flushChanges();
+      expect(node.initialized()).to.equal(false);
+    });
+
+    it('will only drop children without listeners',function(){
+      setAndFlush({a:'a',b:'b'});
+      node.child('a').on('value',spy1);
+      node.forget();
+      expect(node.child('a')).not.to.equal(null);
+      expect(node.child('b')).to.equal(null);
+    });
+
+    it('will not drop children of listening nodes',function(){
+      setAndFlush({a:'a',b:'b'});
+      node.on('value', spy1);
+      node.forget();
+      expect(node.child('a')).not.to.equal(null);
+      expect(node.child('b')).not.to.equal(null);
+    });
+
+    it('will drop children with listeners turned off', function(){
+      setAndFlush({a:'a', b:'b'});
+      node.child('a').on('value', spy1);
+      node.child('a').off('value', spy1);
+      node.forget();
+      expect(node.child('a')).to.equal(null);
+      expect(node.child('b')).to.equal(null);
+    });
+
+    it('will drop children with listeners turned off', function(){
+      setAndFlush({a:'a', b:'b'});
+      node.child('a').on('value', spy1);
+      node.child('a').off('value', spy1);
+      node.child('b').on('value', spy2);
+      node.forget();
+      expect(node.child('a')).to.equal(null);
+      expect(node.child('b')).not.to.equal(null);
+    });
+
+    it('will drop only necessary branches', function(){
+      setAndFlush({a:{b:{c:'c'}, d:{e:'e'}}, f:{g:{h:'h'}, i:{j:'j'}}});
+      node.child('a/b/c').on('value', spy1);
+      expect(node.child('a/b/c')).not.to.equal(null);
+      node.forget();
+      expect(node.child('a/b/c')).not.to.equal(null);
     });
   });
 });
